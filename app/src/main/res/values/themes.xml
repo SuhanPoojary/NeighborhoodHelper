@@ -1,0 +1,34 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme — Modern Blue Metallic -->
+    <style name="Base.Theme.SmartNeighborhoodHelper" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Primary blue colors -->
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryDark">@color/primary_dark</item>
+        <item name="colorOnPrimary">@color/on_primary</item>
+
+        <!-- Secondary orange accent -->
+        <item name="colorSecondary">@color/secondary</item>
+
+        <!-- Background -->
+        <item name="android:colorBackground">@color/background</item>
+        <item name="colorSurface">@color/surface</item>
+
+        <!-- Error color for validation -->
+        <item name="colorError">@color/error</item>
+
+        <!-- Status bar color -->
+        <item name="android:statusBarColor">@color/primary_dark</item>
+
+        <!-- ✅ FIX: Make ALL EditText typed text BLACK and hint dark grey globally -->
+        <item name="android:editTextColor">@color/text_primary</item>
+        <item name="android:textColorHint">#6B7280</item>
+    </style>
+
+    <style name="Theme.SmartNeighborhoodHelper" parent="Base.Theme.SmartNeighborhoodHelper" />
+
+    <!-- Splash screen theme — fullscreen blue gradient -->
+    <style name="Theme.SmartNeighborhoodHelper.Splash" parent="Base.Theme.SmartNeighborhoodHelper">
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:statusBarColor">#0D47A1</item>
+    </style>
+</resources>

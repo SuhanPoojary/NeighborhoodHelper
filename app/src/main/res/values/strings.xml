@@ -1,0 +1,127 @@
+<resources>
+    <string name="app_name">Smart Neighborhood Helper</string>
+
+    <!-- Splash Screen -->
+    <string name="splash_tagline">Report • Track • Resolve</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_title_1">Report Issues Instantly</string>
+    <string name="onboarding_desc_1">Snap a photo, add a description, and your location is captured automatically.</string>
+    <string name="onboarding_title_2">Track Every Update</string>
+    <string name="onboarding_desc_2">Follow your complaint from Pending → In Progress → Resolved in real time.</string>
+    <string name="onboarding_title_3">Build a Better Neighborhood</string>
+    <string name="onboarding_desc_3">Work together as a community to solve problems faster.</string>
+    <string name="btn_skip">Skip</string>
+    <string name="btn_next">Next</string>
+    <string name="btn_get_started">Get Started</string>
+
+    <!-- Role Selection -->
+    <string name="role_selection_title">Smart Helper</string>
+    <string name="role_selection_subtitle">Choose your role to continue</string>
+    <string name="role_admin_title">I\'m an Admin</string>
+    <string name="role_admin_desc">Manage community &amp; providers</string>
+    <string name="role_resident_title">I\'m a Resident</string>
+    <string name="role_resident_desc">Report issues &amp; track status</string>
+    <string name="text_already_have_account">LOGIN TO EXISTING ACCOUNT</string>
+    <string name="text_log_in">Log In</string>
+    <string name="btn_admin_login">Admin</string>
+    <string name="btn_resident_login">Resident</string>
+
+    <!-- Login Screen -->
+    <string name="login_title">Welcome Back</string>
+    <string name="login_subtitle">Log in to your account</string>
+    <string name="hint_email">Enter your email</string>
+    <string name="hint_password">Enter password</string>
+    <string name="btn_login">Log In</string>
+    <string name="text_no_account">Don\'t have an account?</string>
+    <string name="text_sign_up">Sign Up</string>
+    <string name="text_forgot_password">Forgot Password?</string>
+
+    <!-- Admin Signup -->
+    <string name="admin_signup_title">Admin Signup</string>
+    <string name="hint_full_name">Enter your name</string>
+    <string name="hint_phone">Enter phone number</string>
+    <string name="hint_confirm_password">Re-enter password</string>
+    <string name="btn_create_account">Create Account</string>
+
+    <!-- Resident Signup -->
+    <string name="resident_signup_title">Resident Signup</string>
+    <string name="hint_pincode">Enter your area pincode</string>
+    <string name="text_pincode_help">This will help us find communities near you</string>
+    <string name="btn_discover_communities">Discover Communities</string>
+
+    <!-- Discover Communities -->
+    <string name="discover_title">Discover Communities</string>
+    <string name="discover_subtitle">Communities in your area</string>
+    <string name="text_pincode_label">Pincode:</string>
+    <string name="text_members">members</string>
+    <string name="btn_join">Join</string>
+    <string name="join_using_code">Join using community code</string>
+    <string name="text_no_communities">No communities found for this pincode</string>
+    <string name="text_request_sent">Join request sent! You\'ll be notified when approved.</string>
+
+    <!-- Join with Code -->
+    <string name="join_code_title">Join with Code</string>
+    <string name="join_code_subtitle">Enter the 6-character community code shared by your admin</string>
+    <string name="hint_community_code">Enter community code</string>
+    <string name="btn_join_community">Join Community</string>
+
+    <!-- Create Community (Admin) -->
+    <string name="create_community_title">Create Community</string>
+    <string name="create_community_subtitle">Define the scope of your community</string>
+    <string name="hint_community_name">e.g. Sunrise Society Block A</string>
+    <string name="hint_area">e.g. Andheri West</string>
+    <string name="label_community_name">Community Name</string>
+    <string name="label_area">Area / Locality</string>
+    <string name="label_pincode">Pincode</string>
+    <string name="btn_create_community">Create Community</string>
+
+    <!-- Community Created Success -->
+    <string name="community_created_title">Community Created! 🎉</string>
+    <string name="community_created_subtitle">Share this code with your residents</string>
+    <string name="label_community_code">Community Code</string>
+    <string name="btn_copy_code">📋 Copy Code</string>
+    <string name="btn_share_code">📤 Share Code</string>
+    <string name="btn_go_to_dashboard">Go to Dashboard</string>
+    <string name="text_code_copied">Code copied to clipboard!</string>
+
+    <!-- Community Created Screen -->
+    <string name="community_code_label">Community Code</string>
+    <string name="btn_share">Share</string>
+    <string name="btn_go_dashboard">Go to Dashboard</string>
+
+    <!-- Waiting for Approval -->
+    <string name="waiting_title">Request Pending</string>
+    <string name="waiting_subtitle">Your join request is pending admin approval. You\'ll be notified once approved.</string>
+    <string name="btn_check_status">Check Status</string>
+    <string name="btn_try_different">Try Different Community</string>
+
+    <!-- Validation Errors -->
+    <string name="error_empty_name">Please enter your name</string>
+    <string name="error_empty_email">Please enter your email</string>
+    <string name="error_invalid_email">Please enter a valid email</string>
+    <string name="error_empty_password">Please enter a password</string>
+    <string name="error_short_password">Password must be at least 6 characters</string>
+    <string name="error_password_mismatch">Passwords do not match</string>
+    <string name="error_empty_pincode">Please enter your area pincode</string>
+    <string name="error_invalid_pincode">Pincode must be exactly 6 digits</string>
+    <string name="error_empty_phone">Please enter your phone number</string>
+    <string name="error_invalid_phone">Please enter a valid 10-digit phone number</string>
+    <string name="error_empty_community_name">Please enter a community name</string>
+    <string name="error_empty_area">Please enter the area/locality</string>
+    <string name="error_empty_code">Please enter the community code</string>
+    <string name="error_invalid_code">Community code must be 6 characters</string>
+    <string name="error_community_not_found">No community found with this code</string>
+    <string name="error_login_failed">Login failed. Please check your credentials.</string>
+    <string name="error_signup_failed">Signup failed. Please try again.</string>
+
+    <!-- General -->
+    <string name="loading">Please wait…</string>
+    <string name="go_back">Go back</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="full_name">Full Name</string>
+    <string name="phone_number">Phone Number</string>
+    <string name="confirm_password">Confirm Password</string>
+    <string name="pincode">Pincode</string>
+</resources>

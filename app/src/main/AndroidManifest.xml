@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Internet — required for Firebase -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- Location — GPS coordinates when reporting complaints -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
+    <!-- Camera — take photos of complaints -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+
+    <!-- Notifications — alert user when complaint status changes (Android 13+) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <application
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.SmartNeighborhoodHelper"
+        tools:targetApi="31">
+
+        <!-- ══════ SPLASH (LAUNCHER) ══════ -->
+        <activity
+            android:name=".ui.onboarding.SplashActivity"
+            android:exported="true"
+            android:theme="@style/Theme.SmartNeighborhoodHelper.Splash">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- ══════ ONBOARDING ══════ -->
+        <activity
+            android:name=".ui.onboarding.OnboardingActivity"
+            android:exported="false" />
+
+        <!-- ══════ ROLE SELECTION ══════ -->
+        <activity
+            android:name=".ui.onboarding.RoleSelectionActivity"
+            android:exported="false" />
+
+        <!-- ══════ AUTH ══════ -->
+        <activity
+            android:name=".ui.auth.LoginActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.auth.AdminSignupActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.auth.ResidentSignupActivity"
+            android:exported="false" />
+
+        <!-- ══════ COMMUNITY ══════ -->
+        <activity
+            android:name=".ui.community.CreateCommunityActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.community.CommunityCreatedActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.community.DiscoverCommunitiesActivity"
+            android:exported="false" />
+
+        <!-- ══════ MAIN DASHBOARD ══════ -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="false" />
+
+        <!-- ══════ REPORT COMPLAINT ══════ -->
+        <activity
+            android:name=".ui.complaint.ReportComplaintActivity"
+            android:exported="false" />
+
+        <!-- ══════ COMPLAINT DETAIL ══════ -->
+        <activity
+            android:name=".ui.complaint.ComplaintDetailActivity"
+            android:exported="false" />
+
+        <!-- ══════ FileProvider (for camera photos) ══════ -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.provider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
+        <!-- ══════ BACKGROUND SERVICE (complaint status polling) ══════ -->
+        <service
+            android:name=".service.ComplaintStatusService"
+            android:exported="false" />
+
+    </application>
+
+</manifest>

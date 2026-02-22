@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- ── Modern Blue Metallic Theme ── -->
+
+    <!-- Primary — Professional blue -->
+    <color name="primary">#2962FF</color>
+    <color name="primary_dark">#0039CB</color>
+    <color name="primary_light">#768FFF</color>
+    <color name="primary_surface">#E8EAF6</color>
+    <color name="on_primary">#FFFFFF</color>
+
+    <!-- Gradient for headers & splash -->
+    <color name="gradient_start">#1A237E</color>
+    <color name="gradient_end">#2979FF</color>
+
+    <!-- Secondary accent — Soft cyan -->
+    <color name="secondary">#00BCD4</color>
+    <color name="secondary_dark">#008BA3</color>
+
+    <!-- Background & Surface — Clean, soft -->
+    <color name="background">#F5F7FA</color>
+    <color name="surface">#FFFFFF</color>
+    <color name="input_background">#F0F2F5</color>
+
+    <!-- Text colors -->
+    <color name="text_primary">#1A1A2E</color>
+    <color name="text_secondary">#6B7280</color>
+    <color name="text_hint">#6B7280</color>
+    <color name="text_on_dark">#FFFFFF</color>
+
+    <!-- Status colors — Soft pastels with darker text -->
+    <color name="status_pending_bg">#FFF3E0</color>
+    <color name="status_pending_text">#E65100</color>
+    <color name="status_in_progress_bg">#E3F2FD</color>
+    <color name="status_in_progress_text">#1565C0</color>
+    <color name="status_resolved_bg">#E8F5E9</color>
+    <color name="status_resolved_text">#2E7D32</color>
+    <color name="status_rejected_bg">#FFEBEE</color>
+    <color name="status_rejected_text">#C62828</color>
+
+    <!-- Error & Success -->
+    <color name="error">#EF4444</color>
+    <color name="success">#10B981</color>
+    <color name="warning">#F59E0B</color>
+
+    <!-- Divider -->
+    <color name="divider">#E5E7EB</color>
+
+    <!-- Header (for top bars) -->
+    <color name="header_start">#1A237E</color>
+    <color name="header_end">#2979FF</color>
+
+    <!-- Basics -->
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <!-- Logout button -->
+    <color name="logout_red">#EF4444</color>
+    <color name="logout_red_bg">#FEE2E2</color>
+
+    <!-- Card shadow tint -->
+    <color name="card_shadow">#1A000000</color>
+</resources>

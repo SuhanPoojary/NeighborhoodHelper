@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!--
+      FIX: Force dark readable text/hint on EVERY TextInputEditText.
+      Material3 OutlinedBox overrides theme-level hints, so we must
+      set colors explicitly here AND apply this style in every layout.
+    -->
+    <style name="App.TextInputEditText" parent="">
+        <item name="android:textColor">#1A1A2E</item>
+        <item name="android:textColorHint">#6B7280</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:paddingTop">16dp</item>
+        <item name="android:paddingBottom">16dp</item>
+    </style>
+
+    <!--
+      Override the default TextInputLayout style app-wide.
+      This ensures hintTextColor is dark everywhere without
+      adding app:hintTextColor to every single XML layout.
+    -->
+    <style name="Widget.App.TextInputLayout" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        <item name="hintTextColor">#374151</item>
+        <item name="android:textColorHint">#6B7280</item>
+        <item name="boxStrokeWidth">0dp</item>
+        <item name="boxStrokeWidthFocused">1dp</item>
+        <item name="boxCornerRadiusTopStart">14dp</item>
+        <item name="boxCornerRadiusTopEnd">14dp</item>
+        <item name="boxCornerRadiusBottomStart">14dp</item>
+        <item name="boxCornerRadiusBottomEnd">14dp</item>
+        <item name="errorEnabled">true</item>
+    </style>
+
+</resources>
+

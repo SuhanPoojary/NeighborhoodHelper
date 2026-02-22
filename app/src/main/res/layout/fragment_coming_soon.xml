@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:background="#F0F2F8"
+    android:padding="32dp">
+
+    <TextView
+        android:id="@+id/tvTabTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="#1A1A2E"
+        android:text="Coming Soon" />
+
+    <TextView
+        android:id="@+id/tvTabDesc"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="14sp"
+        android:textColor="#6B7280"
+        android:gravity="center"
+        android:layout_marginTop="8dp"
+        android:text="This feature will be built in the next phase." />
+
+</LinearLayout>
+

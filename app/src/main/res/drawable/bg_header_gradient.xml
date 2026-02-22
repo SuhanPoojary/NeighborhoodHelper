@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Purple-indigo gradient matching signup screenshot header -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <gradient
+        android:type="linear"
+        android:startColor="#6B6FFF"
+        android:endColor="#7C6FFF"
+        android:angle="0" />
+</shape>

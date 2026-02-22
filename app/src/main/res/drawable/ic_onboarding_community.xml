@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Onboarding 3: Community — People/handshake icon in blue circle -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <path
+        android:fillColor="#E8EAF6"
+        android:pathData="M24,24m-22,0a22,22 0,1 1,44 0a22,22 0,1 1,-44 0" />
+    <path
+        android:fillColor="#283593"
+        android:pathData="M32,22c2.21,0 3.98,-1.79 3.98,-4S34.21,14 32,14c-2.21,0 -4,1.79 -4,4s1.79,4 4,4zM16,22c2.21,0 3.98,-1.79 3.98,-4S18.21,14 16,14c-2.21,0 -4,1.79 -4,4s1.79,4 4,4zM16,26c-3.33,0 -10,1.67 -10,5v2c0,0.55 0.45,1 1,1h18c0.55,0 1,-0.45 1,-1v-2c0,-3.33 -6.67,-5 -10,-5zM32,26c-0.41,0 -0.88,0.03 -1.38,0.08C32.18,27.24 33.5,28.74 33.5,31v2c0,0.36 -0.07,0.7 -0.18,1H41c0.55,0 1,-0.45 1,-1v-2c0,-3.33 -6.67,-5 -10,-5z" />
+</vector>

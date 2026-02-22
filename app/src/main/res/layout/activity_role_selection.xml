@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    activity_role_selection.xml — Landing screen where user picks Admin or Resident.
+    Two big card buttons + "Already have account? Log In" link.
+    Soft, clean, minimal design matching Figma.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center_horizontal"
+    android:background="#EEF2FF"
+    android:padding="24dp">
+
+    <!-- Top spacer -->
+    <View android:layout_width="0dp" android:layout_height="0dp" android:layout_weight="1" />
+
+    <!-- Title -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/role_selection_title"
+        android:textSize="30sp"
+        android:textStyle="bold"
+        android:textColor="#1A1A2E"
+        android:layout_marginBottom="6dp" />
+
+    <!-- Subtitle -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/role_selection_subtitle"
+        android:textSize="14sp"
+        android:textColor="#6B7280"
+        android:layout_marginBottom="40dp" />
+
+    <!-- Admin Card -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardAdmin"
+        android:layout_width="match_parent"
+        android:layout_height="88dp"
+        android:layout_marginBottom="16dp"
+        android:clickable="true"
+        android:focusable="true"
+        app:cardCornerRadius="20dp"
+        app:cardElevation="4dp"
+        app:cardBackgroundColor="#FFFFFF">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp">
+
+            <!-- Blue circle with shield icon -->
+            <FrameLayout
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:background="@drawable/bg_circle_admin"
+                android:layout_marginEnd="16dp">
+                <ImageView
+                    android:layout_width="26dp"
+                    android:layout_height="26dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_shield"
+                    android:contentDescription="Admin" />
+            </FrameLayout>
+
+            <!-- Text -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/role_admin_title"
+                    android:textSize="17sp"
+                    android:textStyle="bold"
+                    android:textColor="#1A1A2E" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/role_admin_desc"
+                    android:textSize="13sp"
+                    android:textColor="#6B7280"
+                    android:layout_marginTop="3dp" />
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- Resident Card -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardResident"
+        android:layout_width="match_parent"
+        android:layout_height="88dp"
+        android:layout_marginBottom="48dp"
+        android:clickable="true"
+        android:focusable="true"
+        app:cardCornerRadius="20dp"
+        app:cardElevation="4dp"
+        app:cardBackgroundColor="#FFFFFF">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp">
+
+            <!-- Green circle with person icon -->
+            <FrameLayout
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:background="@drawable/bg_circle_resident"
+                android:layout_marginEnd="16dp">
+                <ImageView
+                    android:layout_width="26dp"
+                    android:layout_height="26dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_person"
+                    android:contentDescription="Resident" />
+            </FrameLayout>
+
+            <!-- Text -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/role_resident_title"
+                    android:textSize="17sp"
+                    android:textStyle="bold"
+                    android:textColor="#1A1A2E" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/role_resident_desc"
+                    android:textSize="13sp"
+                    android:textColor="#6B7280"
+                    android:layout_marginTop="3dp" />
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- LOGIN TO EXISTING ACCOUNT label -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/text_already_have_account"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:textColor="#9CA3AF"
+        android:letterSpacing="0.08"
+        android:layout_marginBottom="14dp" />
+
+    <!-- Two outlined login buttons side by side -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <!-- Admin Login button — blue outline -->
+        <TextView
+            android:id="@+id/tvLoginAdmin"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:layout_marginEnd="10dp"
+            android:text="Admin"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:textColor="#3D5AFE"
+            android:gravity="center"
+            android:background="@drawable/bg_btn_outlined_blue"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <!-- Resident Login button — green outline -->
+        <TextView
+            android:id="@+id/tvLoginResident"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:layout_marginStart="10dp"
+            android:text="Resident"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:textColor="#00BFA5"
+            android:gravity="center"
+            android:background="@drawable/bg_btn_outlined_green"
+            android:clickable="true"
+            android:focusable="true" />
+
+    </LinearLayout>
+
+    <!-- Bottom spacer -->
+    <View android:layout_width="0dp" android:layout_height="0dp" android:layout_weight="1" />
+
+</LinearLayout>
+
