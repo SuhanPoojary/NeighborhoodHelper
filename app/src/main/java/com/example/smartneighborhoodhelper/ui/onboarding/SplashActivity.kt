@@ -5,12 +5,18 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.lifecycle.lifecycleScope
 import com.example.smartneighborhoodhelper.MainActivity
 import com.example.smartneighborhoodhelper.R
 import com.example.smartneighborhoodhelper.data.local.prefs.SessionManager
+import com.example.smartneighborhoodhelper.data.local.prefs.ThemePreferences
+import com.example.smartneighborhoodhelper.data.remote.repository.JoinRequestRepository
 import com.example.smartneighborhoodhelper.ui.community.CreateCommunityActivity
 import com.example.smartneighborhoodhelper.ui.community.DiscoverCommunitiesActivity
+import com.example.smartneighborhoodhelper.ui.community.PendingApprovalActivity
 import com.example.smartneighborhoodhelper.util.Constants
+import kotlinx.coroutines.launch
 
 /**
  * SplashActivity.kt — The very first screen shown when app launches.
@@ -31,6 +37,12 @@ import com.example.smartneighborhoodhelper.util.Constants
 class SplashActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Apply theme BEFORE super.onCreate / setContentView
+        AppCompatDelegate.setDefaultNightMode(
+            if (ThemePreferences.isDarkMode(this)) AppCompatDelegate.MODE_NIGHT_YES
+            else AppCompatDelegate.MODE_NIGHT_NO
+        )
+
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_splash)
 
@@ -40,35 +52,64 @@ class SplashActivity : AppCompatActivity() {
         // Looper.getMainLooper() ensures this runs on the main/UI thread
         Handler(Looper.getMainLooper()).postDelayed({
 
-            val next = when {
-                // ✅ If user is logged in, ALWAYS skip onboarding
-                sessionManager.isLoggedIn() -> {
-                    val communityId = sessionManager.getCommunityId().orEmpty()
-                    if (communityId.isBlank()) {
-                        // Logged in but no community yet
-                        when (sessionManager.getUserRole()) {
-                            Constants.ROLE_ADMIN -> Intent(this, CreateCommunityActivity::class.java)
-                            Constants.ROLE_RESIDENT -> Intent(this, DiscoverCommunitiesActivity::class.java)
-                            else -> Intent(this, RoleSelectionActivity::class.java)
+            // ✅ Logged in users skip onboarding
+            if (sessionManager.isLoggedIn()) {
+                val communityId = sessionManager.getCommunityId().orEmpty()
+                val role = sessionManager.getUserRole().orEmpty()
+
+                if (communityId.isNotBlank()) {
+                    startActivity(Intent(this, MainActivity::class.java))
+                    finish()
+                    return@postDelayed
+                }
+
+                // No community yet
+                when (role) {
+                    Constants.ROLE_ADMIN -> {
+                        startActivity(Intent(this, CreateCommunityActivity::class.java))
+                        finish()
+                    }
+
+                    Constants.ROLE_RESIDENT -> {
+                        // SMART ROUTING:
+                        // Only show PendingApproval if they actually have a pending request.
+                        lifecycleScope.launch {
+                            val uid = sessionManager.getUserId().orEmpty()
+                            val hasPending = try {
+                                JoinRequestRepository().hasPendingForResident(uid)
+                            } catch (_: Exception) {
+                                false
+                            }
+
+                            val next = if (hasPending) {
+                                Intent(this@SplashActivity, PendingApprovalActivity::class.java)
+                            } else {
+                                Intent(this@SplashActivity, DiscoverCommunitiesActivity::class.java)
+                            }
+
+                            startActivity(next)
+                            finish()
                         }
-                    } else {
-                        Intent(this, MainActivity::class.java)
+                    }
+
+                    else -> {
+                        startActivity(Intent(this, RoleSelectionActivity::class.java))
+                        finish()
                     }
                 }
 
-                // First time (not logged in) → onboarding
-                !sessionManager.hasSeenOnboarding() -> {
-                    Intent(this, OnboardingActivity::class.java)
-                }
+                return@postDelayed
+            }
 
-                // Not logged in → role selection
-                else -> {
-                    Intent(this, RoleSelectionActivity::class.java)
-                }
+            // Not logged in
+            val next = if (!sessionManager.hasSeenOnboarding()) {
+                Intent(this, OnboardingActivity::class.java)
+            } else {
+                Intent(this, RoleSelectionActivity::class.java)
             }
 
             startActivity(next)
-            finish()  // Remove splash from back stack
+            finish()
 
         }, 2000)  // 2 second delay
     }

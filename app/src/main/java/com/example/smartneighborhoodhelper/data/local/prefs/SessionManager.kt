@@ -92,6 +92,12 @@ class SessionManager(context: Context) {
     /** Get the stored community ID */
     fun getCommunityId(): String? = prefs.getString(KEY_COMMUNITY_ID, null)
 
+    /** Get the stored user email */
+    fun getUserEmail(): String? = prefs.getString(KEY_EMAIL, null)
+
+    /** Get the stored user phone */
+    fun getUserPhone(): String? = prefs.getString(KEY_PHONE, null)
+
     /**
      * Clear all session data — called on logout.
      * clear() removes ALL keys in this SharedPreferences file.
@@ -100,4 +106,3 @@ class SessionManager(context: Context) {
         prefs.edit().clear().apply()
     }
 }
-

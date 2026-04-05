@@ -21,7 +21,7 @@
             android:layout_width="56dp"
             android:layout_height="56dp"
             android:layout_gravity="center"
-            android:src="@drawable/ic_splash_building"
+            android:src="@drawable/ic_splash_logo"
             android:contentDescription="@string/app_name" />
 
     </FrameLayout>
@@ -30,7 +30,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Smart Neighborhood\nHelper"
+        android:text="@string/app_name"
         android:textSize="26sp"
         android:textStyle="bold"
         android:textColor="@color/white"
@@ -42,7 +42,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Report • Track • Resolve"
+        android:text="@string/splash_tagline"
         android:textSize="15sp"
         android:textColor="@color/white"
         android:alpha="0.8" />

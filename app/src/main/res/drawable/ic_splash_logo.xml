@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="120"
+    android:viewportHeight="120">
+
+    <!-- Circular gradient background (blue -> teal) -->
+    <path android:pathData="M60,6C30.2,6 6,30.2 6,60s24.2,54 54,54 54,-24.2 54,-54S89.8,6 60,6z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="28"
+                android:startY="26"
+                android:endX="92"
+                android:endY="94">
+                <item android:offset="0" android:color="#FF2563EB"/>
+                <item android:offset="1" android:color="#FF06B6D4"/>
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Location pin (white) -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M60,24c-13.3,0 -24,10.7 -24,24 0,16.6 18.5,36.7 22.7,41.1 0.7,0.7 1.9,0.7 2.6,0C65.5,84.7 84,64.6 84,48 84,34.7 73.3,24 60,24z"/>
+
+    <!-- Inner house (blue) inside pin -->
+    <path
+        android:fillColor="#FF2563EB"
+        android:pathData="M60,42 48,52v16c0,1.7 1.3,3 3,3h6V61c0,-1.1 0.9,-2 2,-2h2c1.1,0 2,0.9 2,2v10h6c1.7,0 3,-1.3 3,-3V52z"/>
+
+    <!-- Accent dot / check hint (green) at bottom center (tiny, friendly) -->
+    <path
+        android:fillColor="#FF10B981"
+        android:pathData="M60,74c-2.2,0 -4,1.8 -4,4s1.8,4 4,4 4,-1.8 4,-4 -1.8,-4 -4,-4z"/>
+
+</vector>
+

@@ -1,4 +1,4 @@
-package com.example.smartneighborhoodhelper.ui.fragments.resident
+package com.example.smartneighborhoodhelper.ui.fragments.admin
 
 import android.content.Intent
 import android.graphics.Typeface
@@ -22,12 +22,9 @@ import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 
 /**
- * NotificationsFragment - Shows recent complaint updates as a notification-like list.
- *
- * This displays all complaints that have been updated (status changed, provider assigned, etc.)
- * sorted by most recent update first. Tapping a notification opens the complaint detail.
+ * AdminNotificationsFragment - Shows admin-facing activity updates.
  */
-class NotificationsFragment : Fragment() {
+class AdminNotificationsFragment : Fragment() {
     private var _binding: FragmentNotificationsBinding? = null
     private val binding get() = _binding!!
     private val notificationRepo = NotificationRepository()
@@ -145,3 +142,4 @@ class NotificationsFragment : Fragment() {
         }
     }
 }
+

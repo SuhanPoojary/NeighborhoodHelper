@@ -37,9 +37,9 @@ class ProviderAdapter(
             b.tvProviderCategory.text = provider.category
             b.tvProviderPhone.text = provider.phone
 
+            b.ivCall.setOnClickListener { onCall(provider) }
             b.ivEdit.setOnClickListener { onEdit(provider) }
             b.ivDelete.setOnClickListener { onDelete(provider) }
-            b.root.setOnClickListener { onCall(provider) }
         }
     }
 

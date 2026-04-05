@@ -3,6 +3,8 @@ package com.example.smartneighborhoodhelper.ui.onboarding
 import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
+import com.example.smartneighborhoodhelper.data.local.prefs.ThemePreferences
 import com.example.smartneighborhoodhelper.databinding.ActivityRoleSelectionBinding
 import com.example.smartneighborhoodhelper.ui.auth.AdminSignupActivity
 import com.example.smartneighborhoodhelper.ui.auth.LoginActivity
@@ -29,6 +31,18 @@ class RoleSelectionActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityRoleSelectionBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        // Theme switch
+        binding.switchTheme.isChecked = ThemePreferences.isDarkMode(this)
+        binding.switchTheme.setOnCheckedChangeListener { _, isChecked ->
+            ThemePreferences.setDarkMode(this, isChecked)
+            AppCompatDelegate.setDefaultNightMode(
+                if (isChecked) AppCompatDelegate.MODE_NIGHT_YES
+                else AppCompatDelegate.MODE_NIGHT_NO
+            )
+            // Recreate so colors apply immediately on this screen
+            recreate()
+        }
 
         // Admin card → Admin Signup
         binding.cardAdmin.setOnClickListener {

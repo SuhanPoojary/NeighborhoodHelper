@@ -74,6 +74,11 @@
             android:name=".ui.community.DiscoverCommunitiesActivity"
             android:exported="false" />
 
+        <!-- ══════ COMMUNITY (Resident waiting for approval) ══════ -->
+        <activity
+            android:name=".ui.community.PendingApprovalActivity"
+            android:exported="false" />
+
         <!-- ══════ MAIN DASHBOARD ══════ -->
         <activity
             android:name=".MainActivity"
@@ -104,6 +109,23 @@
         <service
             android:name=".service.ComplaintStatusService"
             android:exported="false" />
+
+        <!-- ══════ BROADCAST RECEIVER (shows phone notifications) ══════ -->
+        <!--
+            The Service detects complaint changes → sends a broadcast →
+            This receiver catches it → shows a real phone notification.
+            exported=false means only our app can send broadcasts to it.
+        -->
+        <receiver
+            android:name=".receiver.NotificationReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.example.smartneighborhoodhelper.COMPLAINT_UPDATED" />
+                <!-- ✅ Join request status updates (approved/declined) -->
+                <action android:name="com.example.smartneighborhoodhelper.JOIN_REQUEST_UPDATED" />
+            </intent-filter>
+        </receiver>
+
 
     </application>
 

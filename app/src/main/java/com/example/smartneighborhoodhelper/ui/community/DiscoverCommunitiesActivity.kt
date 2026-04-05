@@ -15,6 +15,7 @@ import com.example.smartneighborhoodhelper.data.remote.repository.CommunityRepos
 import com.example.smartneighborhoodhelper.databinding.ActivityDiscoverCommunitiesBinding
 import com.example.smartneighborhoodhelper.databinding.DialogJoinByCodeBinding
 import com.example.smartneighborhoodhelper.ui.onboarding.RoleSelectionActivity
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 
 /**
@@ -45,7 +46,8 @@ class DiscoverCommunitiesActivity : AppCompatActivity() {
         }
 
         adapter = CommunityAdapter { community ->
-            joinCommunity(community.id)
+            // ✅ Pincode discovery join → request approval
+            requestToJoinCommunity(community.id, community.name)
         }
 
         binding.rvCommunities.layoutManager = LinearLayoutManager(this)
@@ -86,6 +88,53 @@ class DiscoverCommunitiesActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Pincode discovery join flow:
+     * Resident sends join request → admin approves/declines.
+     */
+    private fun requestToJoinCommunity(communityId: String, communityName: String) {
+        val uid = sessionManager.getUserId().orEmpty()
+        val residentName = sessionManager.getUserName().orEmpty()
+
+        // ✅ use the email we already saved in session (from login/signup)
+        // fallback to FirebaseAuth current user email if needed
+        val residentEmail = sessionManager.getUserEmail().orEmpty()
+            .ifBlank { FirebaseAuth.getInstance().currentUser?.email.orEmpty() }
+
+        if (uid.isBlank()) {
+            Toast.makeText(this, "Session missing. Please login again.", Toast.LENGTH_LONG).show()
+            return
+        }
+
+        lifecycleScope.launch {
+            try {
+                showLoading(true)
+                repo.createJoinRequest(
+                    communityId = communityId,
+                    residentUid = uid,
+                    residentName = residentName,
+                    residentEmail = residentEmail,
+                    communityName = communityName
+                )
+
+                showLoading(false)
+                Toast.makeText(this@DiscoverCommunitiesActivity, "Request sent to admin.", Toast.LENGTH_SHORT).show()
+
+                val intent = Intent(this@DiscoverCommunitiesActivity, PendingApprovalActivity::class.java)
+                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                startActivity(intent)
+                finish()
+
+            } catch (e: Exception) {
+                showLoading(false)
+                Toast.makeText(this@DiscoverCommunitiesActivity, e.message ?: "Request failed", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    /**
+     * Code join flow: instant join (no approval) — keeps your current behavior.
+     */
     private fun joinCommunity(communityId: String) {
         val uid = sessionManager.getUserId()
         if (uid.isNullOrBlank()) {

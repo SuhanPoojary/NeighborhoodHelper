@@ -10,8 +10,43 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:gravity="center_horizontal"
-    android:background="#EEF2FF"
+    android:background="@color/background"
     android:padding="24dp">
+
+    <!-- Top row: logo + theme toggle -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:baselineAligned="false">
+
+        <ImageView
+            android:id="@+id/ivAppLogo"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@drawable/ic_splash_logo"
+            android:contentDescription="@string/app_name" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/label_dark_mode"
+            android:textSize="13sp"
+            android:textColor="@color/text_secondary"
+            android:layout_marginEnd="10dp" />
+
+        <com.google.android.material.switchmaterial.SwitchMaterial
+            android:id="@+id/switchTheme"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+    </LinearLayout>
 
     <!-- Top spacer -->
     <View android:layout_width="0dp" android:layout_height="0dp" android:layout_weight="1" />
@@ -20,20 +55,21 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/role_selection_title"
-        android:textSize="30sp"
+        android:text="@string/app_name"
+        android:textSize="26sp"
         android:textStyle="bold"
-        android:textColor="#1A1A2E"
+        android:textColor="@color/text_primary"
+        android:gravity="center"
         android:layout_marginBottom="6dp" />
 
     <!-- Subtitle -->
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/role_selection_subtitle"
+        android:text="@string/splash_tagline"
         android:textSize="14sp"
-        android:textColor="#6B7280"
-        android:layout_marginBottom="40dp" />
+        android:textColor="@color/text_secondary"
+        android:layout_marginBottom="32dp" />
 
     <!-- Admin Card -->
     <com.google.android.material.card.MaterialCardView
@@ -45,13 +81,14 @@
         android:focusable="true"
         app:cardCornerRadius="20dp"
         app:cardElevation="4dp"
-        app:cardBackgroundColor="#FFFFFF">
+        app:cardBackgroundColor="@color/surface">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="horizontal"
             android:gravity="center_vertical"
+            android:baselineAligned="false"
             android:paddingStart="20dp"
             android:paddingEnd="20dp">
 
@@ -66,7 +103,7 @@
                     android:layout_height="26dp"
                     android:layout_gravity="center"
                     android:src="@drawable/ic_shield"
-                    android:contentDescription="Admin" />
+                    android:contentDescription="@string/cd_admin" />
             </FrameLayout>
 
             <!-- Text -->
@@ -81,13 +118,13 @@
                     android:text="@string/role_admin_title"
                     android:textSize="17sp"
                     android:textStyle="bold"
-                    android:textColor="#1A1A2E" />
+                    android:textColor="@color/text_primary" />
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/role_admin_desc"
                     android:textSize="13sp"
-                    android:textColor="#6B7280"
+                    android:textColor="@color/text_secondary"
                     android:layout_marginTop="3dp" />
             </LinearLayout>
 
@@ -105,13 +142,14 @@
         android:focusable="true"
         app:cardCornerRadius="20dp"
         app:cardElevation="4dp"
-        app:cardBackgroundColor="#FFFFFF">
+        app:cardBackgroundColor="@color/surface">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="horizontal"
             android:gravity="center_vertical"
+            android:baselineAligned="false"
             android:paddingStart="20dp"
             android:paddingEnd="20dp">
 
@@ -126,7 +164,7 @@
                     android:layout_height="26dp"
                     android:layout_gravity="center"
                     android:src="@drawable/ic_person"
-                    android:contentDescription="Resident" />
+                    android:contentDescription="@string/cd_resident" />
             </FrameLayout>
 
             <!-- Text -->
@@ -141,13 +179,13 @@
                     android:text="@string/role_resident_title"
                     android:textSize="17sp"
                     android:textStyle="bold"
-                    android:textColor="#1A1A2E" />
+                    android:textColor="@color/text_primary" />
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/role_resident_desc"
                     android:textSize="13sp"
-                    android:textColor="#6B7280"
+                    android:textColor="@color/text_secondary"
                     android:layout_marginTop="3dp" />
             </LinearLayout>
 
@@ -162,7 +200,7 @@
         android:text="@string/text_already_have_account"
         android:textSize="12sp"
         android:textStyle="bold"
-        android:textColor="#9CA3AF"
+        android:textColor="@color/text_secondary"
         android:letterSpacing="0.08"
         android:layout_marginBottom="14dp" />
 
@@ -170,7 +208,8 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:baselineAligned="false">
 
         <!-- Admin Login button — blue outline -->
         <TextView
@@ -179,10 +218,10 @@
             android:layout_height="48dp"
             android:layout_weight="1"
             android:layout_marginEnd="10dp"
-            android:text="Admin"
+            android:text="@string/btn_admin_login"
             android:textSize="15sp"
             android:textStyle="bold"
-            android:textColor="#3D5AFE"
+            android:textColor="@color/text_primary"
             android:gravity="center"
             android:background="@drawable/bg_btn_outlined_blue"
             android:clickable="true"
@@ -195,10 +234,10 @@
             android:layout_height="48dp"
             android:layout_weight="1"
             android:layout_marginStart="10dp"
-            android:text="Resident"
+            android:text="@string/btn_resident_login"
             android:textSize="15sp"
             android:textStyle="bold"
-            android:textColor="#00BFA5"
+            android:textColor="@color/text_primary"
             android:gravity="center"
             android:background="@drawable/bg_btn_outlined_green"
             android:clickable="true"

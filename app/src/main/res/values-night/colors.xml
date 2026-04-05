@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark mode palette (kept simple & readable). -->
+
+    <color name="primary">#2962FF</color>
+    <color name="primary_dark">#0039CB</color>
+    <color name="primary_light">#768FFF</color>
+    <color name="primary_surface">#121826</color>
+    <color name="on_primary">#FFFFFF</color>
+
+    <color name="secondary">#00BCD4</color>
+    <color name="secondary_dark">#008BA3</color>
+
+    <!-- Background & Surface (dark) -->
+    <color name="background">#0B1220</color>
+    <color name="surface">#121826</color>
+    <color name="input_background">#1F2937</color>
+
+    <!-- Text colors -->
+    <color name="text_primary">#E5E7EB</color>
+    <color name="text_secondary">#9CA3AF</color>
+    <color name="text_hint">#9CA3AF</color>
+    <color name="text_on_dark">#FFFFFF</color>
+
+    <!-- Status colors (dark-friendly) -->
+    <color name="status_pending_bg">#3B2F1A</color>
+    <color name="status_pending_text">#FBBF24</color>
+    <color name="status_in_progress_bg">#0B2A3C</color>
+    <color name="status_in_progress_text">#60A5FA</color>
+    <color name="status_resolved_bg">#0F2F1F</color>
+    <color name="status_resolved_text">#34D399</color>
+    <color name="status_rejected_bg">#3A1111</color>
+    <color name="status_rejected_text">#F87171</color>
+
+    <color name="error">#F87171</color>
+    <color name="success">#34D399</color>
+    <color name="warning">#FBBF24</color>
+
+    <color name="divider">#273244</color>
+
+    <color name="gradient_start">#0B1220</color>
+    <color name="gradient_end">#0B1220</color>
+
+    <color name="header_start">#111827</color>
+    <color name="header_end">#1F2937</color>
+
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <color name="logout_red">#F87171</color>
+    <color name="logout_red_bg">#3A1111</color>
+
+    <color name="card_shadow">#00000000</color>
+</resources>
+

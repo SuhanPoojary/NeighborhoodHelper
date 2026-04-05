@@ -59,11 +59,10 @@ class LoginActivity : AppCompatActivity() {
         // Step 2: Initialize SessionManager
         sessionManager = SessionManager(this)
 
-        // Step 3: If user is already logged in, skip to MainActivity
-        if (sessionManager.isLoggedIn()) {
-            navigateToMain()
-            return  // Don't set up the rest of the screen
-        }
+        // ✅ IMPORTANT:
+        // Don't auto-skip this screen based on SharedPreferences.
+        // If a previous user was logged in, that stale session can route to the wrong flow.
+        // SplashActivity handles auto-routing for a valid session.
 
         // Step 4: Set up click listeners
         setupClickListeners()
@@ -172,8 +171,9 @@ class LoginActivity : AppCompatActivity() {
                 }
                 is AuthState.Success -> {
                     showLoading(false)
-                    // Save user session to SharedPreferences
                     val user = state.user
+
+                    // ✅ Always overwrite session with fresh Firestore user profile
                     sessionManager.saveUserSession(
                         uid = user.uid,
                         name = user.name,
@@ -181,8 +181,9 @@ class LoginActivity : AppCompatActivity() {
                         role = user.role,
                         communityId = user.communityId
                     )
-                    // Navigate to MainActivity
-                    navigateToMain()
+
+                    // Navigate based on the FRESH user object (not old prefs)
+                    navigateAfterLogin(user.role, user.communityId)
                 }
                 is AuthState.Error -> {
                     showLoading(false)
@@ -204,16 +205,10 @@ class LoginActivity : AppCompatActivity() {
     }
 
     /**
-     * Navigate to the correct screen after login.
-     * If user already has a community → dashboard.
-     * If not → create/discover community first.
+     * Navigate after login using the freshly fetched Firestore user profile.
      */
-    private fun navigateToMain() {
-        val communityId = sessionManager.getCommunityId().orEmpty()
-        val role = sessionManager.getUserRole().orEmpty()
-
+    private fun navigateAfterLogin(role: String, communityId: String) {
         val target = if (communityId.isBlank()) {
-            // Logged in but no community yet
             when (role) {
                 Constants.ROLE_ADMIN -> CreateCommunityActivity::class.java
                 Constants.ROLE_RESIDENT -> DiscoverCommunitiesActivity::class.java

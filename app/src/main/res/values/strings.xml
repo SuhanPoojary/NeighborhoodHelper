@@ -124,4 +124,9 @@
     <string name="phone_number">Phone Number</string>
     <string name="confirm_password">Confirm Password</string>
     <string name="pincode">Pincode</string>
+
+    <!-- Theme toggle -->
+    <string name="label_dark_mode">Dark mode</string>
+    <string name="cd_admin">Admin</string>
+    <string name="cd_resident">Resident</string>
 </resources>

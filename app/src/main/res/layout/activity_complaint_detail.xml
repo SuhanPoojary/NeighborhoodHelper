@@ -49,7 +49,8 @@
                 android:id="@+id/ivComplaintImage"
                 android:layout_width="match_parent"
                 android:layout_height="220dp"
-                android:scaleType="centerCrop"
+                android:scaleType="fitCenter"
+                android:adjustViewBounds="true"
                 android:background="@drawable/bg_input_white"
                 android:layout_marginBottom="16dp"
                 android:contentDescription="Complaint image" />
@@ -110,8 +111,22 @@
                 android:layout_height="wrap_content"
                 android:textColor="@color/text_primary"
                 android:textSize="14sp"
-                android:layout_marginBottom="16dp"
+                android:layout_marginBottom="10dp"
                 android:layout_marginTop="4dp" />
+
+            <!-- ✅ Open in Maps (only shown when GPS coordinates exist) -->
+            <Button
+                android:id="@+id/btnOpenInMaps"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:layout_marginBottom="16dp"
+                android:background="@drawable/bg_btn_primary"
+                android:gravity="center"
+                android:text="Open in Maps"
+                android:textColor="@color/white"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
 
             <!-- Reported By -->
             <TextView
@@ -240,6 +255,21 @@
                                 android:layout_marginTop="2dp" />
                         </LinearLayout>
                     </LinearLayout>
+
+                    <!-- ── Call Provider Button (visible to BOTH admin & resident) ── -->
+                    <Button
+                        android:id="@+id/btnCallProvider"
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
+                        android:layout_marginTop="12dp"
+                        android:background="@drawable/bg_btn_call"
+                        android:drawableStart="@drawable/ic_call"
+                        android:drawablePadding="8dp"
+                        android:gravity="center"
+                        android:text="Call Provider"
+                        android:textColor="@color/white"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 

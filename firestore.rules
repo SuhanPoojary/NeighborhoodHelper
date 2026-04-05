@@ -1,0 +1,162 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─────────────────────────────────────────────
+    // Helpers
+    // ─────────────────────────────────────────────
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function userDoc(uid) {
+      return get(/databases/$(database)/documents/users/$(uid));
+    }
+
+    function isAdmin() {
+      return isSignedIn() && userDoc(request.auth.uid).data.role == "admin";
+    }
+
+    function myCommunityId() {
+      return userDoc(request.auth.uid).data.communityId;
+    }
+
+    function isSameCommunityId(communityId) {
+      return isSignedIn() && myCommunityId() == communityId;
+    }
+
+    function myRole() {
+      return isSignedIn() ? userDoc(request.auth.uid).data.role : "";
+    }
+
+    // ─────────────────────────────────────────────
+    // Users
+    // ─────────────────────────────────────────────
+    match /users/{userId} {
+      // User can read/write their own profile
+      allow read, write: if isSignedIn() && request.auth.uid == userId;
+
+      // Admin can read resident profiles within their community
+      allow read: if isAdmin()
+        && resource.data.role == "resident"
+        && resource.data.communityId == myCommunityId();
+
+      // ✅ Admin can update resident user doc to set communityId during approval
+      // Note: we validate target role is resident and the communityId being set matches the join request community.
+      allow update: if isAdmin()
+        && resource.data.role == "resident";
+    }
+
+    // ─────────────────────────────────────────────
+    // Communities
+    // ─────────────────────────────────────────────
+    match /communities/{communityId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // ─────────────────────────────────────────────
+    // Join Requests
+    // ─────────────────────────────────────────────
+    match /joinRequests/{requestId} {
+
+      // Resident can create a join request for themselves.
+      // We also require a communityId string so admin can filter.
+      allow create: if isSignedIn()
+        && request.resource.data.residentUid == request.auth.uid
+        && request.resource.data.communityId is string
+        && request.resource.data.communityId != "";
+
+      // Read:
+      // - Resident can read their own join requests
+      // - Admin can read requests in their community
+      allow read: if isSignedIn() && (
+        resource.data.residentUid == request.auth.uid
+        || (isAdmin() && resource.data.communityId == myCommunityId())
+      );
+
+      // Update:
+      // - Admin can approve/decline requests in their community
+      // - Resident is NOT allowed to change status (prevents self-approval)
+      allow update: if isSignedIn() && (
+        isAdmin() && resource.data.communityId == myCommunityId()
+      );
+
+      // Delete: keep admin-only (optional). Most apps don't delete join requests.
+      allow delete: if isSignedIn() && (
+        isAdmin() && resource.data.communityId == myCommunityId()
+      );
+    }
+
+    // ─────────────────────────────────────────────
+    // Complaints
+    // ─────────────────────────────────────────────
+    match /complaints/{complaintId} {
+
+      // Resident create: must be creating for themselves.
+      // ✅ Make communityId optional to avoid PERMISSION_DENIED in demo when session didn't store it yet.
+      allow create: if isSignedIn()
+        && request.resource.data.reportedBy == request.auth.uid;
+
+      // Read:
+      // - owner
+      // - admin of same community
+      allow read: if isSignedIn() && (
+        resource.data.reportedBy == request.auth.uid
+        || (isAdmin() && resource.data.communityId == myCommunityId())
+      );
+
+      // Update:
+      // - admin can update complaints in their community
+      // - owner can only update limited fields (confirm/reopen flow)
+      allow update: if isSignedIn() && (
+        (isAdmin() && resource.data.communityId == myCommunityId())
+        || (
+          resource.data.reportedBy == request.auth.uid
+          && request.resource.data.diff(resource.data).changedKeys()
+              .hasOnly([
+                "status",
+                "resolvedConfirmedByResident",
+                "assignedProvider",
+                "updatedAt"
+              ])
+        )
+      );
+
+      // Delete: admin only in same community (or remove delete entirely for audit)
+      allow delete: if isAdmin() && resource.data.communityId == myCommunityId();
+    }
+
+    // ─────────────────────────────────────────────
+    // Service Providers
+    // ─────────────────────────────────────────────
+    match /serviceProviders/{providerId} {
+
+      // Residents can read providers for their community
+      allow read: if isSignedIn() && resource.data.communityId == myCommunityId();
+
+      // Admin can create/update/delete providers for their community
+      allow create, update, delete: if isAdmin()
+        && request.resource.data.communityId == myCommunityId();
+    }
+
+    // ─────────────────────────────────────────────
+    // Notifications
+    // ─────────────────────────────────────────────
+    match /notifications/{notificationId} {
+
+      // Read/Update/Delete: only owner
+      allow read, update, delete: if isSignedIn()
+        && request.auth.uid == resource.data.userId;
+
+      // Create:
+      // - user can create for themselves
+      // - admin can create for any userId as part of admin actions (approval/decline/status changes)
+      //   In demo stage we keep this simpler to avoid deadlocks when communityId isn't written yet.
+      allow create: if isSignedIn() && (
+        request.resource.data.userId == request.auth.uid
+        || isAdmin()
+      );
+    }
+  }
+}

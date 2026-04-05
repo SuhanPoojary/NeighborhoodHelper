@@ -1,6 +1,9 @@
 package com.example.smartneighborhoodhelper.ui.complaint
 
+import android.app.AlertDialog
+import android.content.Intent
 import android.graphics.BitmapFactory
+import android.net.Uri
 import android.os.Bundle
 import android.util.Base64
 import android.view.View
@@ -14,10 +17,14 @@ import com.bumptech.glide.Glide
 import com.example.smartneighborhoodhelper.R
 import com.example.smartneighborhoodhelper.data.local.prefs.SessionManager
 import com.example.smartneighborhoodhelper.data.model.Complaint
+import com.example.smartneighborhoodhelper.data.model.NotificationItem
 import com.example.smartneighborhoodhelper.data.model.ServiceProvider
 import com.example.smartneighborhoodhelper.data.remote.repository.ComplaintRepository
 import com.example.smartneighborhoodhelper.data.remote.repository.ProviderRepository
+import com.example.smartneighborhoodhelper.data.remote.repository.CommunityRepository
+import com.example.smartneighborhoodhelper.data.remote.repository.NotificationRepository
 import com.example.smartneighborhoodhelper.databinding.ActivityComplaintDetailBinding
+import com.example.smartneighborhoodhelper.databinding.DialogImagePreviewBinding
 import com.example.smartneighborhoodhelper.util.Constants
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
@@ -36,8 +43,12 @@ class ComplaintDetailActivity : AppCompatActivity() {
     private lateinit var session: SessionManager
     private val repo = ComplaintRepository()
     private val providerRepo = ProviderRepository()
+    private val communityRepo = CommunityRepository()
+    private val notificationRepo = NotificationRepository()
     private var complaintId = ""
     private var providerList = listOf<ServiceProvider>()
+    private var currentProviderPhone = ""  // Stored for the Call Provider button
+    private var currentComplaint: Complaint? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -81,9 +92,17 @@ class ComplaintDetailActivity : AppCompatActivity() {
     }
 
     private fun populateUI(complaint: Complaint) {
+        currentComplaint = complaint
+
         // Image — supports Base64 (embedded) and URL (Firebase Storage)
         if (complaint.imageUrl.isNotBlank()) {
             binding.ivComplaintImage.visibility = View.VISIBLE
+
+            // ✅ Tap to view full image
+            binding.ivComplaintImage.setOnClickListener {
+                showFullImageDialog(complaint)
+            }
+
             if (complaint.imageUrl.startsWith("data:") || complaint.imageUrl.length > 500) {
                 // Base64 encoded image
                 try {
@@ -95,12 +114,12 @@ class ComplaintDetailActivity : AppCompatActivity() {
                     val bytes = Base64.decode(base64Str, Base64.DEFAULT)
                     val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
                     binding.ivComplaintImage.setImageBitmap(bitmap)
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     binding.ivComplaintImage.visibility = View.GONE
                 }
             } else {
                 // URL from Firebase Storage
-                Glide.with(this).load(complaint.imageUrl).centerCrop().into(binding.ivComplaintImage)
+                Glide.with(this).load(complaint.imageUrl).fitCenter().into(binding.ivComplaintImage)
             }
         } else {
             binding.ivComplaintImage.visibility = View.GONE
@@ -121,13 +140,32 @@ class ComplaintDetailActivity : AppCompatActivity() {
             binding.tvLocation.text = "Not provided"
         }
 
+        // ✅ Open in Maps button (only if we have GPS coordinates)
+        val hasCoords = complaint.latitude != 0.0 && complaint.longitude != 0.0
+        binding.btnOpenInMaps.visibility = if (hasCoords) View.VISIBLE else View.GONE
+        if (hasCoords) {
+            binding.btnOpenInMaps.setOnClickListener {
+                openInMaps(complaint.latitude, complaint.longitude, complaint.locationText)
+            }
+        }
+
         // Reported By — fetch user name from Firestore
         if (complaint.reportedBy.isNotBlank()) {
             FirebaseFirestore.getInstance().collection("users").document(complaint.reportedBy).get()
                 .addOnSuccessListener { doc ->
-                    binding.tvReportedBy.text = doc.getString("name") ?: complaint.reportedBy
+                    val name = doc.getString("name").orEmpty().trim()
+                    val email = doc.getString("email").orEmpty().trim()
+
+                    // Prefer name; then email; then UID
+                    binding.tvReportedBy.text = when {
+                        name.isNotBlank() -> name
+                        email.isNotBlank() -> email
+                        else -> complaint.reportedBy
+                    }
                 }
-                .addOnFailureListener { binding.tvReportedBy.text = complaint.reportedBy }
+                .addOnFailureListener {
+                    binding.tvReportedBy.text = complaint.reportedBy
+                }
         }
 
         // Date
@@ -235,6 +273,7 @@ class ComplaintDetailActivity : AppCompatActivity() {
 
     /**
      * Load provider details into the info card (visible to both admin & resident).
+     * Also wires up the Call Provider button.
      */
     private fun loadProviderInfoCard(providerId: String) {
         binding.cardProviderInfo.visibility = View.VISIBLE
@@ -246,6 +285,14 @@ class ComplaintDetailActivity : AppCompatActivity() {
                     binding.tvProviderInfoName.text = provider.name
                     binding.tvProviderInfoCategory.text = provider.category
                     binding.tvProviderInfoPhone.text = "📞 ${provider.phone}"
+
+                    // Store phone for call button
+                    currentProviderPhone = provider.phone
+
+                    // Wire up Call Provider button
+                    binding.btnCallProvider.setOnClickListener {
+                        callProvider(currentProviderPhone)
+                    }
                 } else {
                     binding.cardProviderInfo.visibility = View.GONE
                 }
@@ -253,6 +300,19 @@ class ComplaintDetailActivity : AppCompatActivity() {
                 binding.cardProviderInfo.visibility = View.GONE
             }
         }
+    }
+
+    /**
+     * Open the phone dialer with the provider's number.
+     * Uses ACTION_DIAL (no permission needed — just opens the dialer).
+     */
+    private fun callProvider(phone: String) {
+        if (phone.isBlank()) {
+            Toast.makeText(this, "Phone number not available", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:$phone"))
+        startActivity(intent)
     }
 
     /**
@@ -267,6 +327,23 @@ class ComplaintDetailActivity : AppCompatActivity() {
                 lifecycleScope.launch {
                     try {
                         repo.assignProvider(complaintId, "")  // clear provider
+
+                        // Notify resident that provider was removed
+                        val complaint = currentComplaint
+                        val residentId = complaint?.reportedBy.orEmpty()
+                        if (residentId.isNotBlank()) {
+                            val notif = NotificationItem(
+                                userId = residentId,
+                                communityId = complaint?.communityId.orEmpty(),
+                                complaintId = complaintId,
+                                type = Constants.NOTIF_STATUS_CHANGED,
+                                title = "Provider removed",
+                                message = "Assigned provider was removed. Admin will reassign soon.",
+                                isRead = false
+                            )
+                            runCatching { notificationRepo.createNotification(notif) }
+                        }
+
                         Toast.makeText(this@ComplaintDetailActivity, "Provider removed", Toast.LENGTH_SHORT).show()
                         loadComplaint()
                     } catch (e: Exception) {
@@ -330,6 +407,23 @@ class ComplaintDetailActivity : AppCompatActivity() {
         lifecycleScope.launch {
             try {
                 repo.assignProvider(complaintId, provider.id)
+
+                // Notify resident about assignment
+                val complaint = currentComplaint
+                val residentId = complaint?.reportedBy.orEmpty()
+                if (residentId.isNotBlank()) {
+                    val notif = NotificationItem(
+                        userId = residentId,
+                        communityId = complaint?.communityId.orEmpty(),
+                        complaintId = complaintId,
+                        type = Constants.NOTIF_PROVIDER_ASSIGNED,
+                        title = "Provider assigned",
+                        message = "${provider.name} (${provider.category}) is assigned to your complaint.",
+                        isRead = false
+                    )
+                    runCatching { notificationRepo.createNotification(notif) }
+                }
+
                 Toast.makeText(
                     this@ComplaintDetailActivity,
                     "Assigned ${provider.name}",
@@ -390,6 +484,23 @@ class ComplaintDetailActivity : AppCompatActivity() {
         lifecycleScope.launch {
             try {
                 repo.updateStatus(complaintId, newStatus)
+
+                // Notify resident about status change
+                val complaint = currentComplaint
+                val residentId = complaint?.reportedBy.orEmpty()
+                if (residentId.isNotBlank()) {
+                    val notif = NotificationItem(
+                        userId = residentId,
+                        communityId = complaint?.communityId.orEmpty(),
+                        complaintId = complaintId,
+                        type = Constants.NOTIF_STATUS_CHANGED,
+                        title = "Status updated",
+                        message = "Your ${complaint?.category.orEmpty()} complaint is now $newStatus.",
+                        isRead = false
+                    )
+                    runCatching { notificationRepo.createNotification(notif) }
+                }
+
                 Toast.makeText(this@ComplaintDetailActivity, "Status updated to: $newStatus", Toast.LENGTH_SHORT).show()
                 loadComplaint() // Reload UI
             } catch (e: Exception) {
@@ -404,6 +515,27 @@ class ComplaintDetailActivity : AppCompatActivity() {
         lifecycleScope.launch {
             try {
                 repo.confirmResolution(complaintId, confirmed)
+
+                // If resident reopens, notify admin
+                if (!confirmed) {
+                    val complaint = currentComplaint
+                    val communityId = complaint?.communityId.orEmpty()
+                    val community = communityRepo.getCommunityById(communityId)
+                    val adminId = community?.adminUid.orEmpty()
+                    if (adminId.isNotBlank()) {
+                        val notif = NotificationItem(
+                            userId = adminId,
+                            communityId = communityId,
+                            complaintId = complaintId,
+                            type = Constants.NOTIF_REOPENED,
+                            title = "Complaint reopened",
+                            message = "A resident reopened a resolved complaint.",
+                            isRead = false
+                        )
+                        runCatching { notificationRepo.createNotification(notif) }
+                    }
+                }
+
                 val msg = if (confirmed) "Thanks for confirming!" else "Complaint reopened."
                 Toast.makeText(this@ComplaintDetailActivity, msg, Toast.LENGTH_SHORT).show()
                 loadComplaint()
@@ -412,5 +544,50 @@ class ComplaintDetailActivity : AppCompatActivity() {
                 Toast.makeText(this@ComplaintDetailActivity, "Failed: ${e.message}", Toast.LENGTH_LONG).show()
             }
         }
+    }
+
+    /**
+     * Opens Google Maps (or any Maps app) at the given coordinates.
+     * This helps admin locate the complaint area on a real map.
+     */
+    private fun openInMaps(lat: Double, lng: Double, label: String) {
+        val encodedLabel = Uri.encode(label.ifBlank { "Complaint Location" })
+
+        // Prefer google.navigation?q= for turn-by-turn, but geo: works universally.
+        val geoUri = Uri.parse("geo:$lat,$lng?q=$lat,$lng($encodedLabel)")
+        val intent = Intent(Intent.ACTION_VIEW, geoUri)
+
+        // Preferred: Google Maps if installed
+        intent.setPackage("com.google.android.apps.maps")
+
+        try {
+            startActivity(intent)
+        } catch (_: Exception) {
+            // Fallback: any map app
+            val fallback = Intent(Intent.ACTION_VIEW, geoUri)
+            startActivity(fallback)
+        }
+    }
+
+    private fun showFullImageDialog(complaint: Complaint) {
+        if (complaint.imageUrl.isBlank()) return
+
+        val dialogBinding = DialogImagePreviewBinding.inflate(layoutInflater)
+
+        if (complaint.imageUrl.startsWith("data:") || complaint.imageUrl.length > 500) {
+            runCatching {
+                val base64Str = if (complaint.imageUrl.contains(",")) complaint.imageUrl.substringAfter(",") else complaint.imageUrl
+                val bytes = Base64.decode(base64Str, Base64.DEFAULT)
+                val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                dialogBinding.ivPreview.setImageBitmap(bitmap)
+            }
+        } else {
+            Glide.with(this).load(complaint.imageUrl).fitCenter().into(dialogBinding.ivPreview)
+        }
+
+        AlertDialog.Builder(this, android.R.style.Theme_Black_NoTitleBar_Fullscreen)
+            .setView(dialogBinding.root)
+            .setCancelable(true)
+            .show()
     }
 }
