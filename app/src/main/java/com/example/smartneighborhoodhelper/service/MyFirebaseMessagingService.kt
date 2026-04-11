@@ -49,14 +49,16 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             "onMessageReceived(): from=${message.from} dataKeys=${message.data.keys} hasNotification=${message.notification != null}"
         )
 
-        val title = message.data["title"]
-            ?: message.notification?.title
+        val title = message.notification?.title
+            ?: message.data["title"]
             ?: "Update"
 
-        val body = message.data["body"]
-            ?: message.notification?.body
+        val body = message.notification?.body
+            ?: message.data["body"]
             ?: message.data["message"]
             ?: "You have a new update."
+        Log.d("FCM_DEBUG", "DATA: ${message.data}")
+        Log.d("FCM_DEBUG", "NOTIF: ${message.notification}")
 
         val data = message.data
         val complaintId = data["complaintId"].orEmpty()

@@ -152,6 +152,7 @@ router.post('/join-approved', async (req, res, next) => {
 
     const result = await sendToUser(residentId, title, body, {
       type: 'join_approved',
+      target: 'notifications',
       communityId,
     });
 
@@ -177,6 +178,7 @@ router.post('/join-declined', async (req, res, next) => {
 
     const result = await sendToUser(residentId, title, body, {
       type: 'join_declined',
+      target: 'notifications',
       communityId,
     });
 

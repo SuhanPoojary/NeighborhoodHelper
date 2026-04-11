@@ -37,7 +37,6 @@ router.post("/complaint-updated", async (req, res) => {
     if (missing.length) return res.status(400).json({ ok: false, error: `Missing: ${missing}` });
 
     const { residentId, complaintId, status, updatedByName, communityId } = req.body;
-
     // Better UX copy for the resident
     const normalizedStatus = String(status || "").trim().toLowerCase();
 
