@@ -335,14 +335,13 @@ class ComplaintDetailActivity : AppCompatActivity() {
             Toast.makeText(this, "Phone number not available", Toast.LENGTH_SHORT).show()
             return
         }
-        val intent = Intent(this, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
 
-            if (openComplaintDetail) {
-                putExtra("openComplaint", true)
-                putExtra("complaintId", complaintId)
-            }
+        val intent = Intent(Intent.ACTION_DIAL).apply {
+            data = Uri.parse("tel:$phone")
         }
+
+        startActivity(intent)
+    }
 
     /**
      * Remove the assigned provider from a complaint.
