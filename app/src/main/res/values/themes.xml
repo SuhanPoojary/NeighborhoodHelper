@@ -1,6 +1,7 @@
 <resources>
     <!-- Base application theme — Modern Blue Metallic -->
-    <style name="Base.Theme.SmartNeighborhoodHelper" parent="Theme.Material3.DayNight.NoActionBar">
+    <!-- Force LIGHT theme (no DayNight) to avoid dark mode screens when opening from notifications -->
+    <style name="Base.Theme.SmartNeighborhoodHelper" parent="Theme.Material3.Light.NoActionBar">
         <!-- Primary blue colors -->
         <item name="colorPrimary">@color/primary</item>
         <item name="colorPrimaryDark">@color/primary_dark</item>

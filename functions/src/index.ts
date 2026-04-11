@@ -220,7 +220,7 @@ export const onComplaintUpdated = onDocumentUpdated("complaints/{complaintId}", 
 
     if (providerChanged) {
       type = "provider_assigned";
-      title = afterProvider.length > 0 ? "Provider assigned" : "Provider unassigned";
+      title = "Provider Assigned";
       body = afterProvider.length > 0
         ? "Provider has been assigned for your complaint."
         : "The assigned provider was removed from your complaint.";
@@ -230,12 +230,13 @@ export const onComplaintUpdated = onDocumentUpdated("complaints/{complaintId}", 
 
       const normalized = (afterStatus || "").toLowerCase();
       if (normalized === "resolved") {
-        title = "Complaint resolved";
-        body = "Your complaint has been resolved.";
+        title = "Complaint Resolved";
+        body = "Your complaint has been Resolved.";
         target = "complaint_detail";
       } else if (normalized === "in progress" || normalized === "in_progress" || normalized === "inprogress") {
-        title = "Work started";
-        body = "Your complaint is now in progress.";
+        // In your UX, this happens when admin assigns provider.
+        title = "Provider Assigned";
+        body = "Provider has been Assigned for your Complaint.";
         target = "complaint_detail";
       } else {
         title = "Status updated";

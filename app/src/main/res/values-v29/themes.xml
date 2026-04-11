@@ -1,7 +1,6 @@
 <resources>
     <!-- API 29+ only: prevent Android's force-dark from inverting colors -->
-    <style name="Base.Theme.SmartNeighborhoodHelper" parent="Theme.Material3.DayNight.NoActionBar">
+    <style name="Base.Theme.SmartNeighborhoodHelper" parent="Theme.Material3.Light.NoActionBar">
         <item name="android:forceDarkAllowed">false</item>
     </style>
 </resources>
-

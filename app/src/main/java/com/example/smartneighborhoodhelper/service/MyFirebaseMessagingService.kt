@@ -60,35 +60,57 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         val data = message.data
         val complaintId = data["complaintId"].orEmpty()
         val target = data["target"].orEmpty() // complaint_detail | notifications | admin_requests
+        val joinRequestId = data["joinRequestId"].orEmpty()
 
-        showNotification(title, body, complaintId, target)
+        showNotification(title, body, complaintId, target, joinRequestId)
     }
 
-    private fun showNotification(title: String, body: String, complaintId: String, target: String) {
+    private fun showNotification(
+        title: String,
+        body: String,
+        complaintId: String,
+        target: String,
+        joinRequestId: String
+    ) {
         if (!canPostNotifications()) return
         ensureChannel()
 
         val session = SessionManager(applicationContext)
-
-        // Only deep-link if user is logged in AND we have complaintId.
-        // Otherwise -> go to the correct dashboard tab (or just normal splash routing).
         val isLoggedIn = session.isLoggedIn()
-        val openComplaintDetail = isLoggedIn && target.equals("complaint_detail", ignoreCase = true) && complaintId.isNotBlank()
+
+        val openComplaintDetail =
+            isLoggedIn && target.equals("complaint_detail", ignoreCase = true) && complaintId.isNotBlank()
+
+        val openAdminRequests =
+            target.equals("admin_requests", ignoreCase = true) || joinRequestId.isNotBlank()
 
         val openTab = when {
-            target.equals("admin_requests", ignoreCase = true) -> Constants.TAB_ADMIN_REQUESTS
+            openAdminRequests -> Constants.TAB_ADMIN_REQUESTS
             else -> Constants.TAB_NOTIFICATIONS
         }
 
-        val intent = if (openComplaintDetail) {
-            Intent(this, ComplaintDetailActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-                putExtra(Constants.EXTRA_COMPLAINT_ID, complaintId)
+        // If user is logged-in, open MainActivity directly.
+        // If not, SplashActivity will route to login/role selection.
+        val intent = when {
+            openComplaintDetail -> {
+                Intent(this, ComplaintDetailActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                    putExtra(Constants.EXTRA_COMPLAINT_ID, complaintId)
+                }
             }
-        } else {
-            Intent(this, SplashActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-                putExtra(Constants.EXTRA_OPEN_TAB, openTab)
+
+            isLoggedIn -> {
+                Intent(this, MainActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                    putExtra(Constants.EXTRA_OPEN_TAB, openTab)
+                }
+            }
+
+            else -> {
+                Intent(this, SplashActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                    putExtra(Constants.EXTRA_OPEN_TAB, openTab)
+                }
             }
         }
 

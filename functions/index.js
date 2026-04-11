@@ -185,6 +185,32 @@ app.post("/events/complaint-reopened", async (req, res) => {
   }
 });
 
+// NEW: Join request -> notify admin and open Admin Requests tab on click
+app.post("/events/join-request", async (req, res) => {
+  try {
+    const { adminId, residentName, communityId, joinRequestId } = req.body;
+
+    if (!adminId) {
+      return res.status(400).json({ ok: false, error: "Missing adminId" });
+    }
+
+    const title = "New user wants to join";
+    const body = `${residentName || "A resident"} wants to join your community.`;
+
+    await sendToUser(adminId, title, body, {
+      target: "admin_requests",
+      type: "join_request",
+      communityId: communityId || "",
+      joinRequestId: joinRequestId || "",
+    });
+
+    res.json({ ok: true });
+  } catch (e) {
+    console.error("/events/join-request error", e);
+    res.status(500).json({ ok: false, error: e?.message || String(e) });
+  }
+});
+
 // health check
 app.get("/health", (req, res) => {
   res.send("OK");
