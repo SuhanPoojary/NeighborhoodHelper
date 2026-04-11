@@ -122,6 +122,8 @@ async function writeInAppAndPush(n: Omit<InAppNotification, "id">) {
       complaintId: n.complaintId || "",
       type: n.type || "",
       communityId: n.communityId || "",
+      // Default routing. Specific triggers can override by calling sendPushToUser again.
+      target: "notifications",
     },
   });
 }
@@ -340,7 +342,7 @@ export const onJoinRequestCreated = onDocumentCreated("joinRequests/{requestId}"
 
   const residentName = data.residentName || "A resident";
 
-  await writeInAppAndPush({
+  await writeInAppNotification({
     userId: adminUid,
     communityId,
     complaintId: requestId, // keep field non-empty; using requestId for routing/debug
@@ -351,6 +353,7 @@ export const onJoinRequestCreated = onDocumentCreated("joinRequests/{requestId}"
     createdAt: Date.now(),
   });
 
+  // Push (with correct routing)
   await sendPushToUser(adminUid, {
     title: "New user wants to join",
     body: `${residentName} wants to join your community.`,
@@ -363,4 +366,63 @@ export const onJoinRequestCreated = onDocumentCreated("joinRequests/{requestId}"
   });
 
   logger.info("Admin join request notification sent", { requestId, adminUid, communityId });
+});
+
+// ✅ Join request approved/declined → notify resident
+export const onJoinRequestUpdated = onDocumentUpdated("joinRequests/{requestId}", async (event) => {
+  const before = event.data?.before.data() as JoinRequest | undefined;
+  const after = event.data?.after.data() as JoinRequest | undefined;
+  if (!before || !after) return;
+
+  const requestId = event.params.requestId as string;
+  const beforeStatus = (before.status || "").toLowerCase();
+  const afterStatus = (after.status || "").toLowerCase();
+
+  if (!after.residentUid) return;
+  if (beforeStatus === afterStatus) return;
+
+  // Only act on final transitions we care about
+  const isApproved = afterStatus === "approved";
+  const isDeclined = afterStatus === "declined" || afterStatus === "rejected";
+  if (!isApproved && !isDeclined) return;
+
+  const residentUid = after.residentUid;
+  const communityId = after.communityId || "";
+  const communityName = after.communityName || "your community";
+
+  const title = isApproved ? "Request Approved" : "Request Declined";
+  const body = isApproved
+    ? `Your request to join ${communityName} has been approved.`
+    : `Your request to join ${communityName} has been declined.`;
+
+  // In-app
+  await writeInAppNotification({
+    userId: residentUid,
+    communityId,
+    complaintId: requestId,
+    type: isApproved ? "join_approved" : "join_rejected",
+    title,
+    message: body,
+    isRead: false,
+    createdAt: Date.now(),
+  });
+
+  // Push → open Notifications tab (safe) from tap
+  await sendPushToUser(residentUid, {
+    title,
+    body,
+    data: {
+      type: isApproved ? "join_approved" : "join_rejected",
+      communityId,
+      joinRequestId: requestId,
+      target: "notifications",
+    } as any,
+  });
+
+  logger.info("Resident join request status push sent", {
+    requestId,
+    residentUid,
+    beforeStatus,
+    afterStatus,
+  });
 });

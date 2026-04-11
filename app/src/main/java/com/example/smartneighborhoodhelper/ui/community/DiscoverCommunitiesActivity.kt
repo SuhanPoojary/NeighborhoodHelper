@@ -1,5 +1,7 @@
 package com.example.smartneighborhoodhelper.ui.community
-
+import android.util.Log
+import com.example.smartneighborhoodhelper.data.remote.api.BackendClient
+import com.example.smartneighborhoodhelper.data.remote.api.JoinRequestEvent
 import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -116,6 +118,23 @@ class DiscoverCommunitiesActivity : AppCompatActivity() {
                     residentEmail = residentEmail,
                     communityName = communityName
                 )
+                // 🔥 BACKEND NOTIFICATION CALL (ADD THIS)
+                try {
+                    val community = repo.getCommunityById(communityId)
+
+                    BackendClient.api.joinRequest(
+                        JoinRequestEvent(
+                            adminId = community?.adminUid ?: "",   // 🔥 IMPORTANT
+                            residentId = uid,
+                            communityId = communityId
+                        )
+                    )
+
+                    Log.d("JOIN_API", "Join request API called")
+
+                } catch (e: Exception) {
+                    Log.e("JOIN_API", "API failed", e)
+                }
 
                 showLoading(false)
                 Toast.makeText(this@DiscoverCommunitiesActivity, "Request sent to admin.", Toast.LENGTH_SHORT).show()

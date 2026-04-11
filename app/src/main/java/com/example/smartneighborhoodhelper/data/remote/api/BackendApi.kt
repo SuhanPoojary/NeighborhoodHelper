@@ -20,7 +20,11 @@ interface BackendApi {
 
     @POST("events/join-approved")
     suspend fun joinApproved(@Body body: JoinApprovedEvent): BackendEventResponse
+
+    @POST("events/join-declined")
+    suspend fun joinDeclined(@Body body: JoinApprovedEvent): BackendEventResponse
 }
+
 
 
 data class ComplaintCreatedEvent(

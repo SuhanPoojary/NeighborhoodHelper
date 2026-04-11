@@ -162,4 +162,23 @@ router.post('/join-approved', async (req, res, next) => {
   }
 });
 
+router.post('/join-declined', async (req, res, next) => {
+  try {
+    const { residentId, communityId } = req.body || {};
+
+    const title = 'Request Declined';
+    const body = 'Your request to join the community has been declined';
+
+    const result = await sendToUser(residentId, title, body, {
+      type: 'join_declined',
+      target: 'dashboard',
+      communityId,
+    });
+
+    res.json({ ok: true, event: 'join-declined', result });
+  } catch (e) {
+    next(e);
+  }
+});
+
 module.exports = router;

@@ -1,5 +1,6 @@
 package com.example.smartneighborhoodhelper.ui.fragments.admin
-
+import com.example.smartneighborhoodhelper.data.remote.api.BackendClient
+import com.example.smartneighborhoodhelper.data.remote.api.JoinApprovedEvent
 import android.app.AlertDialog
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -115,7 +116,7 @@ class AdminJoinRequestsFragment : Fragment() {
                 try {
                     BackendClient.api.joinApproved(
                         JoinApprovedEvent(
-                            residentId = request.residentId,
+                            residentId = request.residentUid,
                             communityId = request.communityId
                         )
                     )
@@ -137,9 +138,24 @@ class AdminJoinRequestsFragment : Fragment() {
         progressBar?.visibility = View.VISIBLE
         viewLifecycleOwner.lifecycleScope.launch {
             try {
+                // 🔥 STEP 1: Firestore update
                 repo.declineJoinRequest(request.id)
+
+                // 🔥 STEP 2: BACKEND CALL (ADD HERE)
+                try {
+                    BackendClient.api.joinDeclined(
+                        JoinApprovedEvent(
+                            residentId = request.residentUid,   // 🔥 VERY IMPORTANT
+                            communityId = request.communityId
+                        )
+                    )
+                } catch (e: Exception) {
+                    // crash nahi hona chahiye
+                }
+
                 Toast.makeText(requireContext(), "Declined", Toast.LENGTH_SHORT).show()
                 loadRequests()
+
             } catch (e: Exception) {
                 progressBar?.visibility = View.GONE
                 Toast.makeText(requireContext(), e.message ?: "Failed", Toast.LENGTH_LONG).show()

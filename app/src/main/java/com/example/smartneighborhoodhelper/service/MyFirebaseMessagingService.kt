@@ -20,6 +20,7 @@ import com.google.firebase.messaging.RemoteMessage
 import android.content.pm.PackageManager
 import androidx.core.content.ContextCompat
 import android.util.Log
+import androidx.core.app.TaskStackBuilder
 
 /**
  * Receives FCM messages and displays a real phone notification.
@@ -89,37 +90,57 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             else -> Constants.TAB_NOTIFICATIONS
         }
 
-        // If user is logged-in, open MainActivity directly.
-        // If not, SplashActivity will route to login/role selection.
-        val intent = when {
+        // Build a proper back stack:
+        // - If deep-linking to ComplaintDetailActivity, we first open MainActivity on Notifications tab.
+        // - Then open ComplaintDetailActivity.
+        // This ensures Back returns to Notifications tab (instead of exiting).
+        val pendingIntent: PendingIntent = when {
             openComplaintDetail -> {
-                Intent(this, ComplaintDetailActivity::class.java).apply {
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                val mainIntent = Intent(this, MainActivity::class.java).apply {
+                    putExtra(Constants.EXTRA_OPEN_TAB, Constants.TAB_NOTIFICATIONS)
+                    addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                }
+                val detailIntent = Intent(this, com.example.smartneighborhoodhelper.ui.complaint.ComplaintDetailActivity::class.java).apply {
                     putExtra(Constants.EXTRA_COMPLAINT_ID, complaintId)
                 }
+
+                // TaskStackBuilder.getPendingIntent() is nullable in the API; for our case it should exist.
+                // Use !! to satisfy Kotlin's non-null PendingIntent requirements.
+                TaskStackBuilder.create(this)
+                    .addNextIntent(mainIntent)
+                    .addNextIntent(detailIntent)
+                    .getPendingIntent(
+                        complaintId.hashCode(),
+                        PendingIntent.FLAG_UPDATE_CURRENT or (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0)
+                    )!!
             }
 
             isLoggedIn -> {
-                Intent(this, MainActivity::class.java).apply {
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                val intent = Intent(this, MainActivity::class.java).apply {
                     putExtra(Constants.EXTRA_OPEN_TAB, openTab)
+                    addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
                 }
+                PendingIntent.getActivity(
+                    this,
+                    (System.currentTimeMillis() % Int.MAX_VALUE).toInt(),
+                    intent,
+                    PendingIntent.FLAG_UPDATE_CURRENT or (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0)
+                )
             }
 
             else -> {
-                Intent(this, SplashActivity::class.java).apply {
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                val intent = Intent(this, SplashActivity::class.java).apply {
                     putExtra(Constants.EXTRA_OPEN_TAB, openTab)
+                    addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
                 }
+                PendingIntent.getActivity(
+                    this,
+                    (System.currentTimeMillis() % Int.MAX_VALUE).toInt(),
+                    intent,
+                    PendingIntent.FLAG_UPDATE_CURRENT or (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0)
+                )
             }
         }
-
-        val pendingIntent = PendingIntent.getActivity(
-            this,
-            if (openComplaintDetail) complaintId.hashCode() else (System.currentTimeMillis() % Int.MAX_VALUE).toInt(),
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0)
-        )
 
         val soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
 
