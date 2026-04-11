@@ -1,5 +1,9 @@
 package com.example.smartneighborhoodhelper.ui.community
 import android.util.Log
+import com.example.smartneighborhoodhelper.data.remote.repository.FcmTokenRepository
+import com.google.firebase.messaging.FirebaseMessaging
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.tasks.await
 import com.example.smartneighborhoodhelper.data.remote.api.BackendClient
 import com.example.smartneighborhoodhelper.data.remote.api.JoinRequestEvent
 import android.content.Intent
@@ -111,6 +115,20 @@ class DiscoverCommunitiesActivity : AppCompatActivity() {
         lifecycleScope.launch {
             try {
                 showLoading(true)
+
+                // 🔥 STEP 1: ENSURE TOKEN FIRST
+                val token = com.google.firebase.messaging.FirebaseMessaging
+                    .getInstance().token.await()
+
+                if (!token.isNullOrBlank()) {
+                    FcmTokenRepository().upsertToken(uid, token)
+                    Log.d("FCM_TOKEN", "Token ensured before join request")
+                }
+
+                // 🔥 STEP 2: SMALL DELAY (IMPORTANT)
+                kotlinx.coroutines.delay(1000)
+
+                // 🔥 STEP 3: CREATE JOIN REQUEST
                 repo.createJoinRequest(
                     communityId = communityId,
                     residentUid = uid,
@@ -118,25 +136,22 @@ class DiscoverCommunitiesActivity : AppCompatActivity() {
                     residentEmail = residentEmail,
                     communityName = communityName
                 )
-                // 🔥 BACKEND NOTIFICATION CALL (ADD THIS)
-                try {
-                    val community = repo.getCommunityById(communityId)
 
-                    BackendClient.api.joinRequest(
-                        JoinRequestEvent(
-                            adminId = community?.adminUid ?: "",   // 🔥 IMPORTANT
-                            residentId = uid,
-                            communityId = communityId
-                        )
+                // 🔥 STEP 4: BACKEND CALL
+                val community = repo.getCommunityById(communityId)
+
+                BackendClient.api.joinRequest(
+                    JoinRequestEvent(
+                        adminId = community?.adminUid ?: "",
+                        residentId = uid,
+                        communityId = communityId
                     )
+                )
 
-                    Log.d("JOIN_API", "Join request API called")
-
-                } catch (e: Exception) {
-                    Log.e("JOIN_API", "API failed", e)
-                }
+                Log.d("JOIN_API", "Join request API called")
 
                 showLoading(false)
+
                 Toast.makeText(this@DiscoverCommunitiesActivity, "Request sent to admin.", Toast.LENGTH_SHORT).show()
 
                 val intent = Intent(this@DiscoverCommunitiesActivity, PendingApprovalActivity::class.java)

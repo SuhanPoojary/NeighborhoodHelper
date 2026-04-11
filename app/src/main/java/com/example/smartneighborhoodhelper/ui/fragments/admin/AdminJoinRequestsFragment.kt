@@ -1,4 +1,6 @@
 package com.example.smartneighborhoodhelper.ui.fragments.admin
+import android.util.Log
+
 import com.example.smartneighborhoodhelper.data.remote.api.BackendClient
 import com.example.smartneighborhoodhelper.data.remote.api.JoinApprovedEvent
 import android.app.AlertDialog
@@ -109,19 +111,19 @@ class AdminJoinRequestsFragment : Fragment() {
         progressBar?.visibility = View.VISIBLE
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                // 🔥 STEP 1: Firestore update
                 repo.approveJoinRequest(request.id)
 
-                // 🔥 STEP 2: BACKEND CALL (ADD THIS)
-                try {
+                Log.d("DEBUG_UID", "Approve UID: ${request.residentUid}")
+
+                if (request.residentUid.isNotBlank()) {
                     BackendClient.api.joinApproved(
                         JoinApprovedEvent(
                             residentId = request.residentUid,
                             communityId = request.communityId
                         )
                     )
-                } catch (e: Exception) {
-                    // fail bhi ho gaya to app crash nahi hona chahiye
+                } else {
+                    Log.e("DEBUG_UID", "Resident UID EMPTY ❌")
                 }
 
                 Toast.makeText(requireContext(), "Approved", Toast.LENGTH_SHORT).show()
@@ -141,16 +143,19 @@ class AdminJoinRequestsFragment : Fragment() {
                 // 🔥 STEP 1: Firestore update
                 repo.declineJoinRequest(request.id)
 
-                // 🔥 STEP 2: BACKEND CALL (ADD HERE)
-                try {
+                // 🔥 STEP 2: DEBUG CHECK (VERY IMPORTANT)
+                Log.d("DEBUG_UID", "Decline UID: ${request.residentUid}")
+
+                // 🔥 STEP 3: BACKEND CALL
+                if (request.residentUid.isNotBlank()) {
                     BackendClient.api.joinDeclined(
                         JoinApprovedEvent(
-                            residentId = request.residentUid,   // 🔥 VERY IMPORTANT
+                            residentId = request.residentUid,   // 🔥 IMPORTANT
                             communityId = request.communityId
                         )
                     )
-                } catch (e: Exception) {
-                    // crash nahi hona chahiye
+                } else {
+                    Log.e("DEBUG_UID", "Resident UID EMPTY ❌")
                 }
 
                 Toast.makeText(requireContext(), "Declined", Toast.LENGTH_SHORT).show()

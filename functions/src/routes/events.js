@@ -143,16 +143,15 @@ router.post('/join-approved', async (req, res, next) => {
     if (!residentId || !communityId) {
       return res.status(400).json({
         error: 'missing_fields',
-        required: ['residentId', 'communityId']
+        required: ['residentId', 'communityId'],
       });
     }
 
     const title = 'Request Approved';
-    const body = 'Your request for joining the community has been approved';
+    const body = 'Your request to join the community has been approved.';
 
     const result = await sendToUser(residentId, title, body, {
       type: 'join_approved',
-      target: 'dashboard',   // 🔥 important
       communityId,
     });
 
@@ -166,12 +165,18 @@ router.post('/join-declined', async (req, res, next) => {
   try {
     const { residentId, communityId } = req.body || {};
 
+    if (!residentId || !communityId) {
+      return res.status(400).json({
+        error: 'missing_fields',
+        required: ['residentId', 'communityId'],
+      });
+    }
+
     const title = 'Request Declined';
-    const body = 'Your request to join the community has been declined';
+    const body = 'Your request to join the community has been declined.';
 
     const result = await sendToUser(residentId, title, body, {
       type: 'join_declined',
-      target: 'dashboard',
       communityId,
     });
 
