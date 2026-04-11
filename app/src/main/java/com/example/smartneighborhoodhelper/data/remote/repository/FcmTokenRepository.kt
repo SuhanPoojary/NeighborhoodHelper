@@ -17,10 +17,9 @@ class FcmTokenRepository(
 
         Log.d("UID_DEBUG", "Saving for UID: $uid")
 
-        val ref = db.collection("fcmTokens")
+        val tokensRef = db.collection("fcmTokens")
             .document(uid)
             .collection("tokens")
-            .document(token)
 
         val data = hashMapOf(
             "token" to token,
@@ -28,13 +27,24 @@ class FcmTokenRepository(
             "updatedAt" to FieldValue.serverTimestamp()
         )
 
-        // Fire-and-forget. If this fails because of rules/auth, it shouldn't crash UI.
-        ref.set(data)
-            .addOnSuccessListener {
-                Log.d("TOKEN_SAVE", "SUCCESS: Token saved")
+        // 🔥 STEP 1: Delete old tokens
+        tokensRef.get()
+            .addOnSuccessListener { snapshot ->
+                for (doc in snapshot.documents) {
+                    doc.reference.delete()
+                }
+
+                // 🔥 STEP 2: Save only latest token
+                tokensRef.document(token).set(data)
+                    .addOnSuccessListener {
+                        Log.d("TOKEN_SAVE", "SUCCESS: Token saved (only latest)")
+                    }
+                    .addOnFailureListener { e ->
+                        Log.e("TOKEN_SAVE", "FAILED: ${e.message}", e)
+                    }
             }
             .addOnFailureListener { e ->
-                Log.e("TOKEN_SAVE", "FAILED: ${e.message}", e)
+                Log.e("TOKEN_SAVE", "FAILED to fetch old tokens: ${e.message}", e)
             }
     }
 }

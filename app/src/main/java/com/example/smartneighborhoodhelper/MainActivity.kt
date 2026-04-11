@@ -220,6 +220,7 @@ class MainActivity : AppCompatActivity() {
                 Log.d("FCM_TOKEN", "MainActivity token: ${token?.take(12)}... len=${token?.length}")
                 if (!token.isNullOrBlank()) {
                     fcmTokenRepo.upsertToken(uid, token)
+                    Log.d("FCM_TOKEN", "MainActivity token saved")
                 }
             }
             .addOnFailureListener { e ->

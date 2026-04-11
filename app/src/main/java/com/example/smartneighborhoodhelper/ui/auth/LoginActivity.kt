@@ -197,6 +197,7 @@ class LoginActivity : AppCompatActivity() {
                             Log.d("FCM_TOKEN", token)  // 🔥 FULL TOKEN
                             if (!token.isNullOrBlank()) {
                                 fcmTokenRepo.upsertToken(user.uid, token)
+                                Log.d("FCM_TOKEN", "Token saved after login")
                             }
                         }
                         .addOnFailureListener { e ->
