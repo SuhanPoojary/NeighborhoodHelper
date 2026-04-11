@@ -98,6 +98,15 @@ class SessionManager(context: Context) {
     /** Get the stored user phone */
     fun getUserPhone(): String? = prefs.getString(KEY_PHONE, null)
 
+    /** Update cached profile fields after Edit Profile */
+    fun updateProfile(name: String? = null, phone: String? = null, email: String? = null) {
+        val editor = prefs.edit()
+        if (name != null) editor.putString(KEY_USER_NAME, name)
+        if (phone != null) editor.putString(KEY_PHONE, phone)
+        if (email != null) editor.putString(KEY_EMAIL, email)
+        editor.apply()
+    }
+
     /**
      * Clear all session data — called on logout.
      * clear() removes ALL keys in this SharedPreferences file.

@@ -36,7 +36,9 @@ android {
         targetCompatibility = JavaVersion.VERSION_11
     }
     buildFeatures {
-        viewBinding = true  // Type-safe XML access — replaces findViewById()
+        viewBinding = true
+        buildConfig = true
+        // Type-safe XML access — replaces findViewById()
     }
 }
 

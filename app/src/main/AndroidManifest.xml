@@ -94,6 +94,23 @@
             android:name=".ui.complaint.ComplaintDetailActivity"
             android:exported="false" />
 
+        <!-- ══════ PROFILE / SETTINGS ══════ -->
+        <activity
+            android:name=".ui.profile.EditProfileActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.profile.ChangePasswordActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.profile.HelpSupportActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.profile.AboutAppActivity"
+            android:exported="false" />
+
         <!-- ══════ FileProvider (for camera photos) ══════ -->
         <provider
             android:name="androidx.core.content.FileProvider"

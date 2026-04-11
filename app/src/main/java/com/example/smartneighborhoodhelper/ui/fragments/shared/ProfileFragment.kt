@@ -5,11 +5,14 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.example.smartneighborhoodhelper.data.local.prefs.SessionManager
 import com.example.smartneighborhoodhelper.databinding.FragmentProfileBinding
 import com.example.smartneighborhoodhelper.ui.onboarding.RoleSelectionActivity
+import com.example.smartneighborhoodhelper.ui.profile.AboutAppActivity
+import com.example.smartneighborhoodhelper.ui.profile.ChangePasswordActivity
+import com.example.smartneighborhoodhelper.ui.profile.EditProfileActivity
+import com.example.smartneighborhoodhelper.ui.profile.HelpSupportActivity
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.auth.FirebaseAuth
 
@@ -28,25 +31,29 @@ class ProfileFragment : Fragment() {
 
         val session = SessionManager(requireContext())
 
-        // Populate user info
-        val name = session.getUserName().orEmpty()
-        binding.tvName.text = name.ifBlank { "User" }
-        binding.tvAvatar.text = if (name.isNotBlank()) name.first().uppercase() else "U"
-        binding.tvEmail.text = FirebaseAuth.getInstance().currentUser?.email ?: "—"
-        binding.tvRole.text = (session.getUserRole() ?: "user").replaceFirstChar { it.uppercase() }
+        fun bindUserInfo() {
+            val name = session.getUserName().orEmpty()
+            binding.tvName.text = name.ifBlank { "User" }
+            binding.tvAvatar.text = if (name.isNotBlank()) name.first().uppercase() else "U"
+            binding.tvEmail.text = FirebaseAuth.getInstance().currentUser?.email ?: "—"
+            binding.tvRole.text = (session.getUserRole() ?: "user").replaceFirstChar { it.uppercase() }
+        }
 
-        // Settings options — stubs for now
+        // Populate user info
+        bindUserInfo()
+
+        // Settings options
         binding.optEditProfile.setOnClickListener {
-            Toast.makeText(requireContext(), "Edit Profile — coming soon", Toast.LENGTH_SHORT).show()
+            startActivity(Intent(requireContext(), EditProfileActivity::class.java))
         }
         binding.optChangePassword.setOnClickListener {
-            Toast.makeText(requireContext(), "Change Password — coming soon", Toast.LENGTH_SHORT).show()
+            startActivity(Intent(requireContext(), ChangePasswordActivity::class.java))
         }
         binding.optHelp.setOnClickListener {
-            Toast.makeText(requireContext(), "Help & Support — coming soon", Toast.LENGTH_SHORT).show()
+            startActivity(Intent(requireContext(), HelpSupportActivity::class.java))
         }
         binding.optAbout.setOnClickListener {
-            Toast.makeText(requireContext(), "Smart Neighborhood Helper v1.0", Toast.LENGTH_SHORT).show()
+            startActivity(Intent(requireContext(), AboutAppActivity::class.java))
         }
 
         // Logout with confirmation dialog
@@ -68,9 +75,17 @@ class ProfileFragment : Fragment() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        // Refresh session-backed fields after Edit Profile
+        val session = SessionManager(requireContext())
+        val name = session.getUserName().orEmpty()
+        binding.tvName.text = name.ifBlank { "User" }
+        binding.tvAvatar.text = if (name.isNotBlank()) name.first().uppercase() else "U"
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
     }
 }
-
