@@ -13,6 +13,7 @@ import com.example.smartneighborhoodhelper.R
 import com.example.smartneighborhoodhelper.data.local.prefs.SessionManager
 import com.example.smartneighborhoodhelper.data.remote.repository.FcmTokenRepository
 import com.example.smartneighborhoodhelper.ui.complaint.ComplaintDetailActivity
+import com.example.smartneighborhoodhelper.ui.onboarding.SplashActivity
 import com.example.smartneighborhoodhelper.util.Constants
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
@@ -58,7 +59,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 
         val data = message.data
         val complaintId = data["complaintId"].orEmpty()
-        val target = data["target"].orEmpty() // e.g. "complaint_detail" (sent by backend)
+        val target = data["target"].orEmpty() // complaint_detail | notifications | admin_requests
 
         showNotification(title, body, complaintId, target)
     }
@@ -67,10 +68,17 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         if (!canPostNotifications()) return
         ensureChannel()
 
-        // Safe routing:
-        // - Only deep-link to details if backend explicitly says so AND we have an id.
-        // - Otherwise open dashboard (MainActivity).
-        val openComplaintDetail = target.equals("complaint_detail", ignoreCase = true) && complaintId.isNotBlank()
+        val session = SessionManager(applicationContext)
+
+        // Only deep-link if user is logged in AND we have complaintId.
+        // Otherwise -> go to the correct dashboard tab (or just normal splash routing).
+        val isLoggedIn = session.isLoggedIn()
+        val openComplaintDetail = isLoggedIn && target.equals("complaint_detail", ignoreCase = true) && complaintId.isNotBlank()
+
+        val openTab = when {
+            target.equals("admin_requests", ignoreCase = true) -> Constants.TAB_ADMIN_REQUESTS
+            else -> Constants.TAB_NOTIFICATIONS
+        }
 
         val intent = if (openComplaintDetail) {
             Intent(this, ComplaintDetailActivity::class.java).apply {
@@ -78,14 +86,14 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
                 putExtra(Constants.EXTRA_COMPLAINT_ID, complaintId)
             }
         } else {
-            Intent(this, MainActivity::class.java).apply {
+            Intent(this, SplashActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                putExtra(Constants.EXTRA_OPEN_TAB, openTab)
             }
         }
 
         val pendingIntent = PendingIntent.getActivity(
             this,
-            // Keep requestCode stable if it's a complaint detail, otherwise randomize to avoid intent re-use issues.
             if (openComplaintDetail) complaintId.hashCode() else (System.currentTimeMillis() % Int.MAX_VALUE).toInt(),
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0)

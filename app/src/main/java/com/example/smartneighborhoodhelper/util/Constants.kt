@@ -41,6 +41,11 @@ object Constants {
     const val NOTIFICATION_CHANNEL_ID = "complaint_updates_v2"
     const val NOTIFICATION_CHANNEL_NAME = "Complaint Updates"
 
+    // Push click routing
+    const val EXTRA_OPEN_TAB = "extra_open_tab"
+    const val TAB_NOTIFICATIONS = "tab_notifications"
+    const val TAB_ADMIN_REQUESTS = "tab_admin_requests"
+
     // Notification event types for in-app feed + push payload mapping
     const val NOTIF_NEW_COMPLAINT = "new_complaint"
     const val NOTIF_PROVIDER_ASSIGNED = "provider_assigned"

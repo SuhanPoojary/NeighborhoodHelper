@@ -1,4 +1,4 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources>
     <!-- Base application theme — Modern Blue Metallic -->
     <style name="Base.Theme.SmartNeighborhoodHelper" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Primary blue colors -->
@@ -22,6 +22,8 @@
         <!-- ✅ FIX: Make ALL EditText typed text BLACK and hint dark grey globally -->
         <item name="android:editTextColor">@color/text_primary</item>
         <item name="android:textColorHint">#6B7280</item>
+
+        <!-- (forceDarkAllowed set in values-v29/themes.xml due to API 29+) -->
     </style>
 
     <style name="Theme.SmartNeighborhoodHelper" parent="Base.Theme.SmartNeighborhoodHelper" />

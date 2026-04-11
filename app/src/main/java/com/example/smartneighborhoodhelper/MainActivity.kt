@@ -60,28 +60,6 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
-        // 🔥 Handle notification click navigation
-        if (intent.getBooleanExtra("openComplaint", false)) {
-
-            val complaintId = intent.getStringExtra("complaintId")
-
-            if (!complaintId.isNullOrEmpty()) {
-
-                window.decorView.post {
-                    val i = Intent(
-                        this,
-                        com.example.smartneighborhoodhelper.ui.complaint.ComplaintDetailActivity::class.java
-                    )
-                    i.putExtra("complaintId", complaintId)
-                    startActivity(i)
-                }
-            }
-        }
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
 
         sessionManager = SessionManager(this)
         bottomNav = findViewById(R.id.bottomNav)
@@ -124,9 +102,18 @@ class MainActivity : AppCompatActivity() {
             true
         }
 
-        // Load Home tab by default
+        // If we were opened from a push notification, go to the requested tab.
+        val openTab = intent.getStringExtra(Constants.EXTRA_OPEN_TAB).orEmpty()
         if (savedInstanceState == null) {
-            bottomNav.selectedItemId = R.id.nav_home
+            bottomNav.selectedItemId = when (openTab) {
+                Constants.TAB_NOTIFICATIONS -> R.id.nav_notifications
+                Constants.TAB_ADMIN_REQUESTS -> if (bottomNav.menu.findItem(R.id.nav_join_requests) != null) {
+                    R.id.nav_join_requests
+                } else {
+                    R.id.nav_notifications
+                }
+                else -> R.id.nav_home
+            }
         }
 
         // Ensure this device is registered for push notifications (best-effort)

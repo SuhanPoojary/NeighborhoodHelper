@@ -16,6 +16,7 @@ data class JoinRequest(
     val residentUid: String = "",
     val residentName: String = "",
     val residentEmail: String = "",
+    val residentPhone: String = "",
     val status: String = STATUS_PENDING,
     val createdAt: Long = 0L,
     val updatedAt: Long = 0L,
@@ -26,4 +27,3 @@ data class JoinRequest(
         const val STATUS_DECLINED = "Declined"
     }
 }
-

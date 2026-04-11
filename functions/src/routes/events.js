@@ -66,7 +66,7 @@ router.post('/complaint-updated', async (req, res, next) => {
     }
     else if (isAssigned) {
       title = 'Provider Assigned';
-      body = 'Provider has been assigned to your complaint';
+      body = 'Provider has been assigned for your complaint';
     }
     else if (normalizedStatus) {
       title = 'Status Updated';
@@ -75,7 +75,8 @@ router.post('/complaint-updated', async (req, res, next) => {
 
     const result = await sendToUser(residentId, title, body, {
       type: 'complaint_updated',
-      target: 'complaint_detail',
+      // NOTE: we intentionally do NOT deep-link for now.
+      // Click will open app dashboard on Notifications tab.
       complaintId,
       communityId: communityId || '',
       adminId,
@@ -134,4 +135,3 @@ router.post('/join-request', async (req, res, next) => {
 });
 
 module.exports = router;
-

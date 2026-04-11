@@ -157,6 +157,15 @@ class CommunityRepository {
 
         val docRef = joinRequestsRef.document()
         val now = System.currentTimeMillis()
+
+        // Try to fetch the resident phone from the users/{uid} profile (optional field).
+        val residentPhone = try {
+            val userDoc = firestore.collection(Constants.COLLECTION_USERS).document(uid).get().await()
+            (userDoc.getString("phone") ?: userDoc.getString("phoneNumber") ?: "").trim()
+        } catch (_: Exception) {
+            ""
+        }
+
         val request = JoinRequest(
             id = docRef.id,
             communityId = cid,
@@ -164,6 +173,7 @@ class CommunityRepository {
             residentUid = uid,
             residentName = residentName,
             residentEmail = residentEmail,
+            residentPhone = residentPhone,
             status = JoinRequest.STATUS_PENDING,
             createdAt = now,
             updatedAt = now,

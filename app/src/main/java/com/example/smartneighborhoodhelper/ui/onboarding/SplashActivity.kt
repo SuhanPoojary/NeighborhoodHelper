@@ -10,7 +10,6 @@ import androidx.lifecycle.lifecycleScope
 import com.example.smartneighborhoodhelper.MainActivity
 import com.example.smartneighborhoodhelper.R
 import com.example.smartneighborhoodhelper.data.local.prefs.SessionManager
-import com.example.smartneighborhoodhelper.data.local.prefs.ThemePreferences
 import com.example.smartneighborhoodhelper.data.remote.repository.JoinRequestRepository
 import com.example.smartneighborhoodhelper.ui.community.CreateCommunityActivity
 import com.example.smartneighborhoodhelper.ui.community.DiscoverCommunitiesActivity
@@ -37,16 +36,16 @@ import kotlinx.coroutines.launch
 class SplashActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // Apply theme BEFORE super.onCreate / setContentView
-        AppCompatDelegate.setDefaultNightMode(
-            if (ThemePreferences.isDarkMode(this)) AppCompatDelegate.MODE_NIGHT_YES
-            else AppCompatDelegate.MODE_NIGHT_NO
-        )
+        // Force light mode (theme toggle removed)
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
 
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_splash)
 
         val sessionManager = SessionManager(this)
+
+        // If opened from a push, MainActivity should open the Notifications tab.
+        val openTabFromPush = intent.getStringExtra(Constants.EXTRA_OPEN_TAB)
 
         // Handler delays navigation by 2 seconds (2000 milliseconds)
         // Looper.getMainLooper() ensures this runs on the main/UI thread
@@ -58,7 +57,11 @@ class SplashActivity : AppCompatActivity() {
                 val role = sessionManager.getUserRole().orEmpty()
 
                 if (communityId.isNotBlank()) {
-                    startActivity(Intent(this, MainActivity::class.java))
+                    startActivity(Intent(this, MainActivity::class.java).apply {
+                        if (!openTabFromPush.isNullOrBlank()) {
+                            putExtra(Constants.EXTRA_OPEN_TAB, openTabFromPush)
+                        }
+                    })
                     finish()
                     return@postDelayed
                 }

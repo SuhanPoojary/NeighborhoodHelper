@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.onComplaintUpdated = exports.onComplaintCreated = void 0;
+exports.onJoinRequestCreated = exports.onComplaintUpdated = exports.onComplaintCreated = void 0;
 const firestore_1 = require("firebase-functions/v2/firestore");
 const firebase_functions_1 = require("firebase-functions");
 const firebase_admin_1 = __importDefault(require("firebase-admin"));
@@ -151,21 +151,33 @@ exports.onComplaintUpdated = (0, firestore_1.onDocumentUpdated)("complaints/{com
         let type = "status_changed";
         let title = "Complaint updated";
         let body = "Your complaint has been updated.";
+        let target = "notifications";
         if (providerChanged) {
-            if (afterProvider.length > 0) {
-                type = "provider_assigned";
-                title = "Provider assigned";
-                body = "A service provider has been assigned to your complaint.";
-            }
-            else {
-                type = "provider_assigned";
-                title = "Provider unassigned";
-                body = "The assigned provider was removed from your complaint.";
-            }
+            type = "provider_assigned";
+            title = afterProvider.length > 0 ? "Provider assigned" : "Provider unassigned";
+            body = afterProvider.length > 0
+                ? "Provider has been assigned for your complaint."
+                : "The assigned provider was removed from your complaint.";
+            target = "complaint_detail";
         }
         else if (statusChanged) {
-            title = "Status updated";
-            body = `Your complaint status is now: ${afterStatus || "Updated"}.`;
+            type = "status_changed";
+            const normalized = (afterStatus || "").toLowerCase();
+            if (normalized === "resolved") {
+                title = "Complaint resolved";
+                body = "Your complaint has been resolved.";
+                target = "complaint_detail";
+            }
+            else if (normalized === "in progress" || normalized === "in_progress" || normalized === "inprogress") {
+                title = "Work started";
+                body = "Your complaint is now in progress.";
+                target = "complaint_detail";
+            }
+            else {
+                title = "Status updated";
+                body = `Your complaint status is now: ${afterStatus || "Updated"}.`;
+                target = "complaint_detail";
+            }
         }
         await writeInAppAndPush({
             userId: reporterUid,
@@ -176,6 +188,17 @@ exports.onComplaintUpdated = (0, firestore_1.onDocumentUpdated)("complaints/{com
             message: body,
             isRead: false,
             createdAt: Date.now(),
+        });
+        // Also push extra routing hints for Android click handling.
+        await sendPushToUser(reporterUid, {
+            title,
+            body,
+            data: {
+                complaintId: complaintId || "",
+                type: type || "",
+                communityId: communityId || "",
+                target,
+            },
         });
         firebase_functions_1.logger.info("Resident in-app notification written", { complaintId, type, reporterUid });
     }
@@ -227,4 +250,40 @@ exports.onComplaintUpdated = (0, firestore_1.onDocumentUpdated)("complaints/{com
         });
         firebase_functions_1.logger.info("Admin in-app notification written", { complaintId, adminUid });
     }
+});
+exports.onJoinRequestCreated = (0, firestore_1.onDocumentCreated)("joinRequests/{requestId}", async (event) => {
+    const data = event.data?.data();
+    if (!data)
+        return;
+    const requestId = event.params.requestId;
+    const communityId = data.communityId || "";
+    if (!communityId)
+        return;
+    // Notify community admin
+    const commDoc = await firebase_admin_1.default.firestore().collection("communities").doc(communityId).get();
+    const adminUid = commDoc.data()?.adminUid || "";
+    if (!adminUid)
+        return;
+    const residentName = data.residentName || "A resident";
+    await writeInAppAndPush({
+        userId: adminUid,
+        communityId,
+        complaintId: requestId, // keep field non-empty; using requestId for routing/debug
+        type: "join_request",
+        title: "New join request",
+        message: `${residentName} wants to join your community.`,
+        isRead: false,
+        createdAt: Date.now(),
+    });
+    await sendPushToUser(adminUid, {
+        title: "New user wants to join",
+        body: `${residentName} wants to join your community.`,
+        data: {
+            type: "join_request",
+            communityId,
+            joinRequestId: requestId,
+            target: "admin_requests",
+        },
+    });
+    firebase_functions_1.logger.info("Admin join request notification sent", { requestId, adminUid, communityId });
 });

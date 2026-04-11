@@ -147,6 +147,7 @@ class AdminJoinRequestsFragment : Fragment() {
         inner class VH(v: View) : RecyclerView.ViewHolder(v) {
             val tvName: TextView = v.findViewById(R.id.tvName)
             val tvEmail: TextView = v.findViewById(R.id.tvEmail)
+            val tvPhone: TextView = v.findViewById(R.id.tvPhone)
             val tvStatus: TextView = v.findViewById(R.id.tvStatus)
             val btnApprove: MaterialButton = v.findViewById(R.id.btnApprove)
             val btnDecline: MaterialButton = v.findViewById(R.id.btnDecline)
@@ -163,6 +164,7 @@ class AdminJoinRequestsFragment : Fragment() {
             val r = items[position]
             holder.tvName.text = r.residentName
             holder.tvEmail.text = r.residentEmail.ifBlank { "(email not provided)" }
+            holder.tvPhone.text = r.residentPhone.ifBlank { "(phone not provided)" }
             holder.tvStatus.text = r.status
             holder.btnApprove.setOnClickListener { confirmApprove(r) }
             holder.btnDecline.setOnClickListener { confirmDecline(r) }
