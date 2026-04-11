@@ -61,7 +61,16 @@ class NotificationsFragment : Fragment() {
             } catch (e: Exception) {
                 if (_binding == null) return@launch
                 binding.progressBar.visibility = View.GONE
-                Toast.makeText(requireContext(), "Error loading: ${e.message}", Toast.LENGTH_SHORT).show()
+
+                // Firestore can throw FAILED_PRECONDITION (e.g., missing index) even when
+                // cached data still loads. Avoid confusing the user with a toast.
+                val msg = e.message.orEmpty()
+                val isIndexError = msg.contains("FAILED_PRECONDITION", ignoreCase = true)
+                        || msg.contains("requires an index", ignoreCase = true)
+
+                if (!isIndexError) {
+                    Toast.makeText(requireContext(), "Error loading: $msg", Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }
@@ -116,6 +125,7 @@ class NotificationsFragment : Fragment() {
                 Constants.NOTIF_JOIN_REQUEST -> "👥"
                 Constants.NOTIF_JOIN_APPROVED -> "✅"
                 Constants.NOTIF_JOIN_REJECTED -> "❌"
+                Constants.NOTIF_COMPLAINT_CHANGED -> "✏"
                 else -> "🔔"
             }
 

@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -15,6 +16,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.example.smartneighborhoodhelper.data.local.prefs.SessionManager
 import com.example.smartneighborhoodhelper.data.remote.repository.CommunityRepository
+import com.example.smartneighborhoodhelper.data.remote.repository.FcmTokenRepository
 import com.example.smartneighborhoodhelper.data.remote.repository.NotificationRepository
 import com.example.smartneighborhoodhelper.service.ComplaintStatusService
 import com.example.smartneighborhoodhelper.ui.fragments.admin.AdminComplaintsFragment
@@ -29,6 +31,7 @@ import com.example.smartneighborhoodhelper.ui.fragments.shared.ProfileFragment
 import com.example.smartneighborhoodhelper.util.Constants
 import com.example.smartneighborhoodhelper.util.NotificationHelper
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
@@ -38,6 +41,7 @@ class MainActivity : AppCompatActivity() {
 
     private val notificationRepo = NotificationRepository()
     private val communityRepo = CommunityRepository()
+    private val fcmTokenRepo = FcmTokenRepository()
 
     /**
      * Android 13+ (API 33) requires runtime permission to show notifications.
@@ -107,6 +111,9 @@ class MainActivity : AppCompatActivity() {
         if (savedInstanceState == null) {
             bottomNav.selectedItemId = R.id.nav_home
         }
+
+        // Ensure this device is registered for push notifications (best-effort)
+        registerFcmTokenIfLoggedIn()
 
         // ── Request notification permission (Android 13+) & start service ──
         requestNotificationPermissionAndStartService()
@@ -198,5 +205,22 @@ class MainActivity : AppCompatActivity() {
         supportFragmentManager.beginTransaction()
             .replace(R.id.fragmentContainer, fragment)
             .commit()
+    }
+
+    private fun registerFcmTokenIfLoggedIn() {
+        val uid = sessionManager.getUserId().orEmpty()
+        if (uid.isBlank()) return
+
+        FirebaseMessaging.getInstance().token
+            .addOnSuccessListener { token ->
+                Log.d("FCM_TOKEN", "MainActivity token: ${token?.take(12)}... len=${token?.length}")
+                if (!token.isNullOrBlank()) {
+                    fcmTokenRepo.upsertToken(uid, token)
+                }
+            }
+            .addOnFailureListener { e ->
+                Log.w("FCM_TOKEN", "MainActivity token fetch failed", e)
+                // Ignore - push will simply not work on this device until token fetch succeeds.
+            }
     }
 }

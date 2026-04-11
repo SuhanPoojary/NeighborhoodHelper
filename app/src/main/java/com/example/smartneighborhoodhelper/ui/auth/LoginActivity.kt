@@ -2,6 +2,7 @@ package com.example.smartneighborhoodhelper.ui.auth
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.util.Patterns
 import android.view.View
 import android.widget.Toast
@@ -10,6 +11,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.example.smartneighborhoodhelper.MainActivity
 import com.example.smartneighborhoodhelper.R
 import com.example.smartneighborhoodhelper.data.local.prefs.SessionManager
+import com.example.smartneighborhoodhelper.data.remote.repository.FcmTokenRepository
 import com.example.smartneighborhoodhelper.databinding.ActivityLoginBinding
 import com.example.smartneighborhoodhelper.ui.community.CreateCommunityActivity
 import com.example.smartneighborhoodhelper.ui.community.DiscoverCommunitiesActivity
@@ -18,6 +20,7 @@ import com.example.smartneighborhoodhelper.util.Constants
 import com.example.smartneighborhoodhelper.viewmodel.AuthState
 import com.example.smartneighborhoodhelper.viewmodel.AuthViewModel
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.messaging.FirebaseMessaging
 
 /**
  * LoginActivity.kt — Login screen for RETURNING users.
@@ -48,6 +51,9 @@ class LoginActivity : AppCompatActivity() {
 
     // SessionManager — reads/writes SharedPreferences
     private lateinit var sessionManager: SessionManager
+
+    // FCM Token repository
+    private val fcmTokenRepo = FcmTokenRepository()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -181,6 +187,18 @@ class LoginActivity : AppCompatActivity() {
                         role = user.role,
                         communityId = user.communityId
                     )
+
+                    // Ensure this device is registered for push notifications right after login.
+                    FirebaseMessaging.getInstance().token
+                        .addOnSuccessListener { token ->
+                            Log.d("FCM_TOKEN", token)  // 🔥 FULL TOKEN
+                            if (!token.isNullOrBlank()) {
+                                fcmTokenRepo.upsertToken(user.uid, token)
+                            }
+                        }
+                        .addOnFailureListener { e ->
+                            Log.w("FCM_TOKEN", "LoginActivity token fetch failed", e)
+                        }
 
                     // Navigate based on the FRESH user object (not old prefs)
                     navigateAfterLogin(user.role, user.communityId)

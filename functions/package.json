@@ -10,14 +10,16 @@
     "lint": "eslint .",
     "deploy": "firebase deploy --only functions",
     "serve": "firebase emulators:start --only functions,firestore",
-    "build": "tsc -p tsconfig.json"
+    "build": "tsc -p tsconfig.json",
+    "start": "node server.js"
   },
   "dependencies": {
     "firebase-admin": "^12.2.0",
-    "firebase-functions": "^5.0.1"
+    "firebase-functions": "^5.0.1",
+    "cors": "^2.8.5",
+    "express": "^4.21.2"
   },
   "devDependencies": {
     "typescript": "^5.5.4"
   }
 }
-

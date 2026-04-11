@@ -14,6 +14,5 @@
 .cxx
 local.properties
 
-# Firebase config (contains API keys — NEVER commit this!)
-app/google-services.json
+
 

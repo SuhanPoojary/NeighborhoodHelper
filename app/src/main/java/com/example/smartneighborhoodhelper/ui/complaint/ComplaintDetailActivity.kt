@@ -23,6 +23,7 @@ import com.example.smartneighborhoodhelper.data.remote.repository.ComplaintRepos
 import com.example.smartneighborhoodhelper.data.remote.repository.ProviderRepository
 import com.example.smartneighborhoodhelper.data.remote.repository.CommunityRepository
 import com.example.smartneighborhoodhelper.data.remote.repository.NotificationRepository
+import com.example.smartneighborhoodhelper.data.remote.repository.BackendEventRepository
 import com.example.smartneighborhoodhelper.databinding.ActivityComplaintDetailBinding
 import com.example.smartneighborhoodhelper.databinding.DialogImagePreviewBinding
 import com.example.smartneighborhoodhelper.util.Constants
@@ -45,6 +46,7 @@ class ComplaintDetailActivity : AppCompatActivity() {
     private val providerRepo = ProviderRepository()
     private val communityRepo = CommunityRepository()
     private val notificationRepo = NotificationRepository()
+    private val backendEvents = BackendEventRepository()
     private var complaintId = ""
     private var providerList = listOf<ServiceProvider>()
     private var currentProviderPhone = ""  // Stored for the Call Provider button
@@ -191,6 +193,13 @@ class ComplaintDetailActivity : AppCompatActivity() {
 
             val hasProvider = complaint.assignedProvider.isNotBlank()
 
+            // ✅ UX: Admin can't move to In Progress/Resolved unless provider is assigned
+            binding.btnMarkInProgress.isEnabled = hasProvider
+            binding.btnMarkInProgress.alpha = if (hasProvider) 1.0f else 0.45f
+
+            binding.btnMarkResolved.isEnabled = hasProvider
+            binding.btnMarkResolved.alpha = if (hasProvider) 1.0f else 0.45f
+
             // Show current provider card + Remove button if assigned
             if (hasProvider) {
                 binding.llAssignedProvider.visibility = View.VISIBLE
@@ -235,9 +244,18 @@ class ComplaintDetailActivity : AppCompatActivity() {
             }
 
             binding.btnMarkInProgress.setOnClickListener {
+                if (!hasProvider) {
+                    Toast.makeText(this, "Assign a service provider before marking In Progress", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
                 updateStatus(complaint.id, Constants.STATUS_IN_PROGRESS)
             }
+
             binding.btnMarkResolved.setOnClickListener {
+                if (!hasProvider) {
+                    Toast.makeText(this, "Assign a service provider before marking Resolved", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
                 updateStatus(complaint.id, Constants.STATUS_RESOLVED)
             }
             binding.btnAssignProvider.setOnClickListener {
@@ -254,11 +272,17 @@ class ComplaintDetailActivity : AppCompatActivity() {
             binding.llResidentConfirm.visibility = View.VISIBLE
 
             binding.btnConfirmYes.setOnClickListener {
+                // ✅ Optimistic UI: hide immediately so it feels instant
+                binding.llResidentConfirm.visibility = View.GONE
                 confirmResolution(complaint.id, true)
             }
             binding.btnConfirmNo.setOnClickListener {
+                binding.llResidentConfirm.visibility = View.GONE
                 confirmResolution(complaint.id, false)
             }
+        } else {
+            // ensure hidden in all other cases
+            binding.llResidentConfirm.visibility = View.GONE
         }
     }
 
@@ -422,6 +446,17 @@ class ComplaintDetailActivity : AppCompatActivity() {
                         isRead = false
                     )
                     runCatching { notificationRepo.createNotification(notif) }
+
+                    // ✅ Push notification via external backend
+                    launch {
+                        backendEvents.complaintUpdated(
+                            residentId = residentId,
+                            adminId = session.getUserId().orEmpty(),
+                            complaintId = complaintId,
+                            communityId = complaint?.communityId.orEmpty(),
+                            status = Constants.STATUS_IN_PROGRESS
+                        )
+                    }
                 }
 
                 Toast.makeText(
@@ -499,6 +534,17 @@ class ComplaintDetailActivity : AppCompatActivity() {
                         isRead = false
                     )
                     runCatching { notificationRepo.createNotification(notif) }
+
+                    // ✅ Push notification via external backend
+                    launch {
+                        backendEvents.complaintUpdated(
+                            residentId = residentId,
+                            adminId = session.getUserId().orEmpty(),
+                            complaintId = complaintId,
+                            communityId = complaint?.communityId.orEmpty(),
+                            status = newStatus
+                        )
+                    }
                 }
 
                 Toast.makeText(this@ComplaintDetailActivity, "Status updated to: $newStatus", Toast.LENGTH_SHORT).show()
@@ -516,23 +562,42 @@ class ComplaintDetailActivity : AppCompatActivity() {
             try {
                 repo.confirmResolution(complaintId, confirmed)
 
-                // If resident reopens, notify admin
-                if (!confirmed) {
-                    val complaint = currentComplaint
-                    val communityId = complaint?.communityId.orEmpty()
-                    val community = communityRepo.getCommunityById(communityId)
-                    val adminId = community?.adminUid.orEmpty()
-                    if (adminId.isNotBlank()) {
+                val complaint = currentComplaint
+                val communityId = complaint?.communityId.orEmpty()
+
+                // ✅ Fetch adminId once (used for in-app + push)
+                val community = runCatching { communityRepo.getCommunityById(communityId) }.getOrNull()
+                val adminId = community?.adminUid.orEmpty()
+
+                // ✅ Notify admin (resident action) — appears in ADMIN Notifications tab
+                if (adminId.isNotBlank()) {
+                    runCatching {
+                        val category = complaint?.category.orEmpty().ifBlank { "Complaint" }
                         val notif = NotificationItem(
                             userId = adminId,
                             communityId = communityId,
                             complaintId = complaintId,
-                            type = Constants.NOTIF_REOPENED,
-                            title = "Complaint reopened",
-                            message = "A resident reopened a resolved complaint.",
+                            type = if (confirmed) Constants.NOTIF_COMPLAINT_CHANGED else Constants.NOTIF_REOPENED,
+                            title = if (confirmed) "Resident confirmed resolution" else "Resident reopened complaint",
+                            message = if (confirmed)
+                                "Resident confirmed the '$category' issue is resolved."
+                            else
+                                "Resident says the '$category' issue is NOT fixed. Complaint reopened.",
                             isRead = false
                         )
-                        runCatching { notificationRepo.createNotification(notif) }
+                        notificationRepo.createNotification(notif)
+                    }
+
+                    // ✅ Push notification via external backend (resident reopened)
+                    if (!confirmed) {
+                        launch {
+                            backendEvents.complaintReopened(
+                                adminId = adminId,
+                                residentId = session.getUserId().orEmpty(),
+                                complaintId = complaintId,
+                                communityId = communityId
+                            )
+                        }
                     }
                 }
 
@@ -541,6 +606,8 @@ class ComplaintDetailActivity : AppCompatActivity() {
                 loadComplaint()
             } catch (e: Exception) {
                 binding.progressBar.visibility = View.GONE
+                // If we failed, show confirm buttons again so user can retry
+                binding.llResidentConfirm.visibility = View.VISIBLE
                 Toast.makeText(this@ComplaintDetailActivity, "Failed: ${e.message}", Toast.LENGTH_LONG).show()
             }
         }

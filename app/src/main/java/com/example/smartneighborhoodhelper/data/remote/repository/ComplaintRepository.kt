@@ -83,16 +83,23 @@ class ComplaintRepository {
     }
     /**
      * Assign a service provider to a complaint (Admin action).
+     *
+     * Contract:
+     * - If providerId is NOT blank  -> assign + move to In Progress
+     * - If providerId IS blank      -> remove assignment + revert back to Pending
      */
     suspend fun assignProvider(complaintId: String, providerId: String) {
         val updates = mutableMapOf<String, Any>(
             "assignedProvider" to providerId,
             "updatedAt" to System.currentTimeMillis()
         )
-        // Only set status to "In Progress" if actually assigning (not removing)
-        if (providerId.isNotBlank()) {
-            updates["status"] = Constants.STATUS_IN_PROGRESS
+
+        updates["status"] = if (providerId.isNotBlank()) {
+            Constants.STATUS_IN_PROGRESS
+        } else {
+            Constants.STATUS_PENDING
         }
+
         complaintsRef.document(complaintId).update(updates).await()
     }
     /**

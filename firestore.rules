@@ -13,27 +13,23 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/users/$(uid));
     }
 
+    function myRole() {
+      return isSignedIn() ? userDoc(request.auth.uid).data.role : "";
+    }
+
     function isAdmin() {
-      return isSignedIn() && userDoc(request.auth.uid).data.role == "admin";
+      return isSignedIn() && myRole() == "admin";
     }
 
     function myCommunityId() {
-      return userDoc(request.auth.uid).data.communityId;
-    }
-
-    function isSameCommunityId(communityId) {
-      return isSignedIn() && myCommunityId() == communityId;
-    }
-
-    function myRole() {
-      return isSignedIn() ? userDoc(request.auth.uid).data.role : "";
+      return isSignedIn() ? userDoc(request.auth.uid).data.communityId : "";
     }
 
     // ─────────────────────────────────────────────
     // Users
     // ─────────────────────────────────────────────
     match /users/{userId} {
-      // User can read/write their own profile
+      // Self read/write
       allow read, write: if isSignedIn() && request.auth.uid == userId;
 
       // Admin can read resident profiles within their community
@@ -41,10 +37,11 @@ service cloud.firestore {
         && resource.data.role == "resident"
         && resource.data.communityId == myCommunityId();
 
-      // ✅ Admin can update resident user doc to set communityId during approval
-      // Note: we validate target role is resident and the communityId being set matches the join request community.
+      // Admin can update ONLY resident communityId during approval (prevents admin editing everything)
       allow update: if isAdmin()
-        && resource.data.role == "resident";
+        && resource.data.role == "resident"
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly(["communityId"])
+        && request.resource.data.communityId == myCommunityId();
     }
 
     // ─────────────────────────────────────────────
@@ -60,32 +57,17 @@ service cloud.firestore {
     // ─────────────────────────────────────────────
     match /joinRequests/{requestId} {
 
-      // Resident can create a join request for themselves.
-      // We also require a communityId string so admin can filter.
       allow create: if isSignedIn()
         && request.resource.data.residentUid == request.auth.uid
         && request.resource.data.communityId is string
         && request.resource.data.communityId != "";
 
-      // Read:
-      // - Resident can read their own join requests
-      // - Admin can read requests in their community
       allow read: if isSignedIn() && (
         resource.data.residentUid == request.auth.uid
         || (isAdmin() && resource.data.communityId == myCommunityId())
       );
 
-      // Update:
-      // - Admin can approve/decline requests in their community
-      // - Resident is NOT allowed to change status (prevents self-approval)
-      allow update: if isSignedIn() && (
-        isAdmin() && resource.data.communityId == myCommunityId()
-      );
-
-      // Delete: keep admin-only (optional). Most apps don't delete join requests.
-      allow delete: if isSignedIn() && (
-        isAdmin() && resource.data.communityId == myCommunityId()
-      );
+      allow update, delete: if isAdmin() && resource.data.communityId == myCommunityId();
     }
 
     // ─────────────────────────────────────────────
@@ -93,22 +75,18 @@ service cloud.firestore {
     // ─────────────────────────────────────────────
     match /complaints/{complaintId} {
 
-      // Resident create: must be creating for themselves.
-      // ✅ Make communityId optional to avoid PERMISSION_DENIED in demo when session didn't store it yet.
+      // Resident create: must be for themselves AND must include a communityId.
+      // (If you allow blank communityId, admin-community queries and rules break.)
       allow create: if isSignedIn()
-        && request.resource.data.reportedBy == request.auth.uid;
+        && request.resource.data.reportedBy == request.auth.uid
+        && request.resource.data.communityId is string
+        && request.resource.data.communityId != "";
 
-      // Read:
-      // - owner
-      // - admin of same community
       allow read: if isSignedIn() && (
         resource.data.reportedBy == request.auth.uid
         || (isAdmin() && resource.data.communityId == myCommunityId())
       );
 
-      // Update:
-      // - admin can update complaints in their community
-      // - owner can only update limited fields (confirm/reopen flow)
       allow update: if isSignedIn() && (
         (isAdmin() && resource.data.communityId == myCommunityId())
         || (
@@ -123,7 +101,6 @@ service cloud.firestore {
         )
       );
 
-      // Delete: admin only in same community (or remove delete entirely for audit)
       allow delete: if isAdmin() && resource.data.communityId == myCommunityId();
     }
 
@@ -131,13 +108,22 @@ service cloud.firestore {
     // Service Providers
     // ─────────────────────────────────────────────
     match /serviceProviders/{providerId} {
-
-      // Residents can read providers for their community
       allow read: if isSignedIn() && resource.data.communityId == myCommunityId();
 
-      // Admin can create/update/delete providers for their community
       allow create, update, delete: if isAdmin()
         && request.resource.data.communityId == myCommunityId();
+    }
+
+    // ─────────────────────────────────────────────
+    // FCM Tokens (push notification targeting)
+    // ─────────────────────────────────────────────
+    match /fcmTokens/{uid} {
+      allow read: if isSignedIn() && request.auth.uid == uid;
+      allow write: if isSignedIn() && request.auth.uid == uid;
+
+      match /tokens/{tokenId} {
+        allow read, write: if isSignedIn() && request.auth.uid == uid;
+      }
     }
 
     // ─────────────────────────────────────────────
@@ -145,17 +131,41 @@ service cloud.firestore {
     // ─────────────────────────────────────────────
     match /notifications/{notificationId} {
 
-      // Read/Update/Delete: only owner
-      allow read, update, delete: if isSignedIn()
+      // Read:
+      // - Owner can read
+      // - Admin can read notifications for their own community (admin dashboard view)
+      allow read: if isSignedIn() && (
+        request.auth.uid == resource.data.userId
+        || (
+          isAdmin()
+          && resource.data.communityId is string
+          && resource.data.communityId == myCommunityId()
+        )
+      );
+
+      // Update/Delete: only owner (mark read)
+      allow update, delete: if isSignedIn()
         && request.auth.uid == resource.data.userId;
 
       // Create:
       // - user can create for themselves
-      // - admin can create for any userId as part of admin actions (approval/decline/status changes)
-      //   In demo stage we keep this simpler to avoid deadlocks when communityId isn't written yet.
+      // - admin can create for their community
+      // - resident can create notifications targeted to the community admin
+      //   (needed for admin Notifications tab when resident creates/reopens/updates complaints)
       allow create: if isSignedIn() && (
         request.resource.data.userId == request.auth.uid
-        || isAdmin()
+        || (
+          isAdmin()
+          && request.resource.data.communityId is string
+          && request.resource.data.communityId == myCommunityId()
+        )
+        || (
+          // resident -> admin
+          request.resource.data.communityId is string
+          && request.resource.data.communityId == myCommunityId()
+          && request.resource.data.userId is string
+          && request.resource.data.userId == get(/databases/$(database)/documents/communities/$(myCommunityId())).data.adminUid
+        )
       );
     }
   }

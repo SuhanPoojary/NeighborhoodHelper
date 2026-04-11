@@ -10,6 +10,8 @@ import android.os.Build
 import androidx.core.app.NotificationCompat
 import com.example.smartneighborhoodhelper.R
 import com.example.smartneighborhoodhelper.ui.complaint.ComplaintDetailActivity
+import android.content.pm.PackageManager
+import androidx.core.content.ContextCompat
 
 /**
  * NotificationHelper — Creates notification channels and shows REAL phone notifications.
@@ -50,6 +52,17 @@ object NotificationHelper {
         }
     }
 
+    private fun canPostNotifications(context: Context): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ContextCompat.checkSelfPermission(
+                context,
+                android.Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+        } else {
+            true
+        }
+    }
+
     /**
      * Show a real phone notification for a complaint event.
      *
@@ -66,6 +79,7 @@ object NotificationHelper {
         title: String,
         body: String
     ) {
+        if (!canPostNotifications(context)) return
         // Intent to open complaint detail when notification is tapped
         val intent = Intent(context, ComplaintDetailActivity::class.java).apply {
             putExtra(Constants.EXTRA_COMPLAINT_ID, complaintId)
@@ -108,6 +122,7 @@ object NotificationHelper {
         body: String,
         intent: Intent
     ) {
+        if (!canPostNotifications(context)) return
         val pendingIntent = PendingIntent.getActivity(
             context,
             notificationId,

@@ -126,7 +126,7 @@ class ComplaintStatusService : Service() {
         // ─────────────────────────────────────────────
         // 1) Complaints polling (existing)
         // ─────────────────────────────────────────────
-        val lastComplaintCheck = prefs.getLong(PREF_LAST_COMPLAINT_CHECK, System.currentTimeMillis())
+        val lastComplaintCheck = prefs.getLong(PREF_LAST_COMPLAINT_CHECK, 0L)
         val complaintsRef = db.collection(Constants.COLLECTION_COMPLAINTS)
 
         val complaintQuery = if (role == Constants.ROLE_RESIDENT) {

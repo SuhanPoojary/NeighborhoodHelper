@@ -65,6 +65,8 @@ dependencies {
     implementation(libs.firebase.firestore.ktx)
     implementation(libs.firebase.storage.ktx)
 
+    // Push notifications (FCM)
+    implementation(libs.firebase.messaging.ktx)
 
     // ── Image Loading ──
     implementation(libs.glide)
@@ -76,4 +78,9 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+
+    // ── Networking (backend event API calls) ──
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.converter.gson)
+    implementation(libs.okhttp.logging.interceptor)
 }

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "45874686865",
+    "project_id": "smartneighborhoodhelper",
+    "storage_bucket": "smartneighborhoodhelper.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:45874686865:android:03931eebe73e270a778830",
+        "android_client_info": {
+          "package_name": "com.example.smartneighborhoodhelper"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDZ4uPiTM2qvHtX46m-QxSVtf3UbDsFy8M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

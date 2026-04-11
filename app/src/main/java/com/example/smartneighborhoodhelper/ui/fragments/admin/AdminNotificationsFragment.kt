@@ -18,6 +18,7 @@ import com.example.smartneighborhoodhelper.databinding.FragmentNotificationsBind
 import com.example.smartneighborhoodhelper.databinding.ItemNotificationBinding
 import com.example.smartneighborhoodhelper.ui.complaint.ComplaintDetailActivity
 import com.example.smartneighborhoodhelper.util.Constants
+import com.google.firebase.firestore.ListenerRegistration
 import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 
@@ -25,9 +26,12 @@ import java.util.concurrent.TimeUnit
  * AdminNotificationsFragment - Shows admin-facing activity updates.
  */
 class AdminNotificationsFragment : Fragment() {
+
     private var _binding: FragmentNotificationsBinding? = null
     private val binding get() = _binding!!
     private val notificationRepo = NotificationRepository()
+
+    private var notifListener: ListenerRegistration? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentNotificationsBinding.inflate(inflater, container, false)
@@ -37,30 +41,45 @@ class AdminNotificationsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding.rvNotifications.layoutManager = LinearLayoutManager(requireContext())
-        loadNotifications()
+        startListening()
     }
 
     override fun onResume() {
         super.onResume()
-        loadNotifications()
+        // Listener handles updates; no need to re-fetch.
     }
 
-    private fun loadNotifications() {
+    private fun startListening() {
         val session = SessionManager(requireContext())
         val userId = session.getUserId() ?: return
+
         binding.progressBar.visibility = View.VISIBLE
-        viewLifecycleOwner.lifecycleScope.launch {
-            try {
-                val notifications = notificationRepo.getNotificationsForUser(userId)
-                if (_binding == null) return@launch
+
+        // Avoid multiple listeners
+        notifListener?.remove()
+        notifListener = notificationRepo.listenForNotificationsForUser(
+            userId = userId,
+            limit = 100,
+            onUpdate = { notifications ->
+                if (_binding == null) return@listenForNotificationsForUser
                 binding.progressBar.visibility = View.GONE
                 showNotifications(notifications)
-            } catch (e: Exception) {
-                if (_binding == null) return@launch
+            },
+            onError = { e ->
+                if (_binding == null) return@listenForNotificationsForUser
                 binding.progressBar.visibility = View.GONE
-                Toast.makeText(requireContext(), "Error loading: ${e.message}", Toast.LENGTH_SHORT).show()
+
+                // Firestore often throws FAILED_PRECONDITION when a composite index is missing.
+                // Data may still appear from cache, so avoid confusing the user with a toast.
+                val msg = e.message.orEmpty()
+                val isIndexError = msg.contains("FAILED_PRECONDITION", ignoreCase = true)
+                    || msg.contains("requires an index", ignoreCase = true)
+
+                if (!isIndexError) {
+                    Toast.makeText(requireContext(), "Error loading: $msg", Toast.LENGTH_SHORT).show()
+                }
             }
-        }
+        )
     }
 
     private fun showNotifications(items: List<NotificationItem>) {
@@ -85,6 +104,8 @@ class AdminNotificationsFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        notifListener?.remove()
+        notifListener = null
         _binding = null
     }
 
@@ -113,6 +134,7 @@ class AdminNotificationsFragment : Fragment() {
                 Constants.NOTIF_JOIN_REQUEST -> "👥"
                 Constants.NOTIF_JOIN_APPROVED -> "✅"
                 Constants.NOTIF_JOIN_REJECTED -> "❌"
+                Constants.NOTIF_COMPLAINT_CHANGED -> "✏"
                 else -> "🔔"
             }
 
@@ -142,4 +164,3 @@ class AdminNotificationsFragment : Fragment() {
         }
     }
 }
-

@@ -10,6 +10,7 @@ import android.location.LocationManager
 import android.net.Uri
 import android.os.Bundle
 import android.util.Base64
+import android.util.Log
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -26,11 +27,13 @@ import com.example.smartneighborhoodhelper.R
 import com.example.smartneighborhoodhelper.data.local.prefs.SessionManager
 import com.example.smartneighborhoodhelper.data.model.Complaint
 import com.example.smartneighborhoodhelper.data.model.NotificationItem
+import com.example.smartneighborhoodhelper.data.remote.repository.BackendEventRepository
 import com.example.smartneighborhoodhelper.data.remote.repository.CommunityRepository
 import com.example.smartneighborhoodhelper.data.remote.repository.ComplaintRepository
 import com.example.smartneighborhoodhelper.data.remote.repository.NotificationRepository
 import com.example.smartneighborhoodhelper.databinding.ActivityReportComplaintBinding
 import com.example.smartneighborhoodhelper.util.Constants
+import com.example.smartneighborhoodhelper.util.NotificationHelper
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
@@ -63,6 +66,7 @@ class ReportComplaintActivity : AppCompatActivity() {
     private val repo = ComplaintRepository()
     private val communityRepo = CommunityRepository()
     private val notificationRepo = NotificationRepository()
+    private val backendEvents = BackendEventRepository()
 
     private var currentStep = 0
     private var selectedCategory = ""
@@ -487,6 +491,8 @@ class ReportComplaintActivity : AppCompatActivity() {
         val userId = session.getUserId() ?: return
         val communityId = session.getCommunityId() ?: return
 
+        Log.d(TAG, "submitComplaint(): userId=$userId communityId=$communityId")
+
         val description = binding.etDescription.text?.toString().orEmpty().trim()
         val landmark = binding.etLocation.text?.toString().orEmpty().trim()
         val autoLoc = binding.etAutoLocation.text?.toString().orEmpty().trim()
@@ -534,8 +540,9 @@ class ReportComplaintActivity : AppCompatActivity() {
                 )
 
                 val id = repo.reportComplaint(complaint)
+                Log.d(TAG, "submitComplaint(): complaint created id=$id")
 
-                // ✅ Create an in-app notification for the RESIDENT too (so Notifications tab isn't empty)
+                // Resident notif (self)
                 runCatching {
                     val residentNotif = NotificationItem(
                         userId = userId,
@@ -547,22 +554,44 @@ class ReportComplaintActivity : AppCompatActivity() {
                         isRead = false
                     )
                     notificationRepo.createNotification(residentNotif)
+                }.onFailure {
+                    Log.e(TAG, "submitComplaint(): resident notification FAILED: ${it.message}", it)
                 }
 
-                // Notify admin about new complaint
-                val community = communityRepo.getCommunityById(communityId)
-                val adminId = community?.adminUid.orEmpty()
-                if (adminId.isNotBlank()) {
-                    val notif = NotificationItem(
-                        userId = adminId,
-                        communityId = communityId,
-                        complaintId = id,
-                        type = Constants.NOTIF_NEW_COMPLAINT,
-                        title = "New complaint submitted",
-                        message = "New ${selectedCategory} complaint reported.",
-                        isRead = false
-                    )
-                    notificationRepo.createNotification(notif)
+                // Admin notif (target adminUid)
+                runCatching {
+                    val community = communityRepo.getCommunityById(communityId)
+                    val adminId = community?.adminUid.orEmpty()
+                    Log.d(TAG, "submitComplaint(): fetched community adminUid=$adminId")
+
+                    if (adminId.isNotBlank()) {
+                        val notif = NotificationItem(
+                            userId = adminId,
+                            communityId = communityId,
+                            complaintId = id,
+                            type = Constants.NOTIF_NEW_COMPLAINT,
+                            title = "New complaint submitted",
+                            message = "New ${selectedCategory} complaint reported.",
+                            isRead = false
+                        )
+                        notificationRepo.createNotification(notif)
+                        Log.d(TAG, "submitComplaint(): admin notification SUCCESS adminId=$adminId")
+
+                        // ✅ Push notification via external backend
+                        launch {
+                            backendEvents.complaintCreated(
+                                adminId = adminId,
+                                residentId = userId,
+                                complaintId = id,
+                                communityId = communityId,
+                                category = selectedCategory
+                            )
+                        }
+                    } else {
+                        Log.e(TAG, "submitComplaint(): adminUid is BLANK for communityId=$communityId")
+                    }
+                }.onFailure {
+                    Log.e(TAG, "submitComplaint(): admin notification FAILED: ${it.message}", it)
                 }
 
                 showLoading(false)
@@ -576,10 +605,10 @@ class ReportComplaintActivity : AppCompatActivity() {
             } catch (e: Exception) {
                 showLoading(false)
 
-                // ✅ User-friendly error, no raw Firebase exception noise
+                // ✅ Keep errors clean and avoid confusing "login" message in normal cases.
                 val msg = when {
                     (e.message ?: "").contains("PERMISSION_DENIED", ignoreCase = true) ->
-                        "Permission denied. Please login again and retry."
+                        "Couldn't sync right now. Please try again."
 
                     (e.message ?: "").contains("too large", ignoreCase = true) ||
                         (e.message ?: "").contains("Resource exhausted", ignoreCase = true) ->
@@ -597,5 +626,9 @@ class ReportComplaintActivity : AppCompatActivity() {
         binding.progressBar.visibility = if (show) View.VISIBLE else View.GONE
         binding.btnNext.isEnabled = !show
         binding.btnPrevious.isEnabled = !show
+    }
+
+    private companion object {
+        private const val TAG = "ReportComplaint"
     }
 }

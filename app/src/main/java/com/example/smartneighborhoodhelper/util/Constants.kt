@@ -49,6 +49,7 @@ object Constants {
     const val NOTIF_JOIN_REQUEST = "join_request"
     const val NOTIF_JOIN_APPROVED = "join_approved"
     const val NOTIF_JOIN_REJECTED = "join_rejected"
+    const val NOTIF_COMPLAINT_CHANGED = "complaint_changed"
 
     // Notification filters
     const val FILTER_ALL = "all"
