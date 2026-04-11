@@ -38,11 +38,30 @@ router.post("/complaint-updated", async (req, res) => {
 
     const { residentId, complaintId, status, updatedByName, communityId } = req.body;
 
-    const title = "Complaint updated";
-    const body = `${updatedByName || "Admin"} updated status to ${status || "updated"}`;
+    // Better UX copy for the resident
+    const normalizedStatus = String(status || "").trim().toLowerCase();
+
+    let title = "Complaint updated";
+    let body = "Your complaint has been updated.";
+
+    if (normalizedStatus === "in progress" || normalizedStatus === "in_progress" || normalizedStatus === "inprogress") {
+      // In your app, this status often implies provider assignment.
+      title = "Provider Assigned";
+      body = "Provider has been assigned to your complaint.";
+    } else if (normalizedStatus === "resolved") {
+      title = "Complaint Resolved";
+      body = "Your complaint has been resolved.";
+    } else if (normalizedStatus) {
+      title = "Complaint updated";
+      body = `${updatedByName || "Admin"} updated status to ${status}`;
+    }
 
     const result = await sendToUser(residentId, title, body, {
-      type: "complaint_updated",
+      type: normalizedStatus === "resolved"
+        ? "complaint_resolved"
+        : (normalizedStatus === "in progress" || normalizedStatus === "in_progress" || normalizedStatus === "inprogress")
+          ? "provider_assigned"
+          : "complaint_updated",
       complaintId,
       status: status || "",
       communityId: communityId || "",

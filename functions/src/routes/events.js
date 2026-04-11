@@ -42,16 +42,40 @@ router.post('/complaint-created', async (req, res, next) => {
 
 router.post('/complaint-updated', async (req, res, next) => {
   try {
-    const { residentId, adminId, complaintId, communityId, status } = req.body || {};
+    const { residentId, adminId, complaintId, communityId, status, providerAssigned } = req.body || {};
     if (!residentId || !adminId || !complaintId) {
       return res.status(400).json({ error: 'missing_fields', required: ['residentId', 'adminId', 'complaintId'] });
     }
 
-    const title = 'Complaint updated';
-    const body = status ? `Your complaint status is now: ${status}` : 'Your complaint has been updated.';
+    const normalizedStatus = String(status || '').trim().toLowerCase();
+
+    let title = 'Complaint Update';
+    let body = 'Your complaint has been updated.';
+
+    const isAssigned =
+      providerAssigned === true ||
+      normalizedStatus === 'assigned' ||
+      normalizedStatus === 'in_progress' ||
+      normalizedStatus === 'in progress';
+
+    const isResolved = normalizedStatus === 'resolved';
+
+    if (isResolved) {
+      title = 'Complaint Resolved';
+      body = 'Your complaint has been resolved';
+    }
+    else if (isAssigned) {
+      title = 'Provider Assigned';
+      body = 'Provider has been assigned to your complaint';
+    }
+    else if (normalizedStatus) {
+      title = 'Status Updated';
+      body = `Your complaint status is now: ${status}`;
+    }
 
     const result = await sendToUser(residentId, title, body, {
       type: 'complaint_updated',
+      target: 'complaint_detail',
       complaintId,
       communityId: communityId || '',
       adminId,

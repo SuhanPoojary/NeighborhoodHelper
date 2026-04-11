@@ -60,6 +60,23 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
+        // 🔥 Handle notification click navigation
+        if (intent.getBooleanExtra("openComplaint", false)) {
+
+            val complaintId = intent.getStringExtra("complaintId")
+
+            if (!complaintId.isNullOrEmpty()) {
+
+                window.decorView.post {
+                    val i = Intent(
+                        this,
+                        com.example.smartneighborhoodhelper.ui.complaint.ComplaintDetailActivity::class.java
+                    )
+                    i.putExtra("complaintId", complaintId)
+                    startActivity(i)
+                }
+            }
+        }
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)

@@ -12,6 +12,7 @@ import com.example.smartneighborhoodhelper.MainActivity
 import com.example.smartneighborhoodhelper.R
 import com.example.smartneighborhoodhelper.data.local.prefs.SessionManager
 import com.example.smartneighborhoodhelper.data.remote.repository.FcmTokenRepository
+import com.example.smartneighborhoodhelper.ui.complaint.ComplaintDetailActivity
 import com.example.smartneighborhoodhelper.util.Constants
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
@@ -54,25 +55,37 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             ?: message.data["message"]
             ?: "You have a new update."
 
-        val complaintId = message.data["complaintId"].orEmpty()
+        val data = message.data
+        val complaintId = data["complaintId"].orEmpty()
+        val target = data["target"].orEmpty() // e.g. "complaint_detail" (sent by backend)
 
-        showNotification(title, body, complaintId)
+        showNotification(title, body, complaintId, target)
     }
 
-    private fun showNotification(title: String, body: String, complaintId: String) {
+    private fun showNotification(title: String, body: String, complaintId: String, target: String) {
         if (!canPostNotifications()) return
         ensureChannel()
 
-        val intent = Intent(this, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-            if (complaintId.isNotBlank()) {
+        // Safe routing:
+        // - Only deep-link to details if backend explicitly says so AND we have an id.
+        // - Otherwise open dashboard (MainActivity).
+        val openComplaintDetail = target.equals("complaint_detail", ignoreCase = true) && complaintId.isNotBlank()
+
+        val intent = if (openComplaintDetail) {
+            Intent(this, ComplaintDetailActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
                 putExtra(Constants.EXTRA_COMPLAINT_ID, complaintId)
+            }
+        } else {
+            Intent(this, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
             }
         }
 
         val pendingIntent = PendingIntent.getActivity(
             this,
-            complaintId.hashCode(),
+            // Keep requestCode stable if it's a complaint detail, otherwise randomize to avoid intent re-use issues.
+            if (openComplaintDetail) complaintId.hashCode() else (System.currentTimeMillis() % Int.MAX_VALUE).toInt(),
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0)
         )
@@ -93,7 +106,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             .build()
 
         val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        val notificationId = if (complaintId.isNotBlank()) complaintId.hashCode() else {
+        val notificationId = if (openComplaintDetail) complaintId.hashCode() else {
             (System.currentTimeMillis() % Int.MAX_VALUE).toInt()
         }
         nm.notify(notificationId, n)

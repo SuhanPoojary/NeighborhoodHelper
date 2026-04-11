@@ -178,6 +178,9 @@ class LoginActivity : AppCompatActivity() {
                 is AuthState.Success -> {
                     showLoading(false)
                     val user = state.user
+                    Log.d("UID_DEBUG", "Auth UID: ${FirebaseAuth.getInstance().currentUser?.uid}")
+                    Log.d("UID_DEBUG", "Session UID: ${sessionManager.getUserId()}")
+                    Log.d("UID_DEBUG", "User UID (Firestore): ${user.uid}")
 
                     // ✅ Always overwrite session with fresh Firestore user profile
                     sessionManager.saveUserSession(
