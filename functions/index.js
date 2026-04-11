@@ -210,7 +210,58 @@ app.post("/events/join-request", async (req, res) => {
     res.status(500).json({ ok: false, error: e?.message || String(e) });
   }
 });
+// 🔥 JOIN APPROVED → notify resident
+app.post("/events/join-approved", async (req, res) => {
+  try {
+    const { residentId, communityId } = req.body;
 
+    if (!residentId) {
+      return res.status(400).json({ ok: false, error: "Missing residentId" });
+    }
+
+    await sendToUser(residentId,
+      "Request Approved",
+      "Your request to join the community has been approved.",
+      {
+        target: "notifications",   // 🔥 IMPORTANT
+        type: "join_approved",
+        communityId: communityId || "",
+      }
+    );
+
+    res.json({ ok: true });
+  } catch (e) {
+    console.error("/events/join-approved error", e);
+    res.status(500).json({ ok: false, error: e?.message || String(e) });
+  }
+});
+
+
+// 🔥 JOIN DECLINED → notify resident
+app.post("/events/join-declined", async (req, res) => {
+  try {
+    const { residentId, communityId } = req.body;
+
+    if (!residentId) {
+      return res.status(400).json({ ok: false, error: "Missing residentId" });
+    }
+
+    await sendToUser(residentId,
+      "Request Declined",
+      "Your request to join the community has been declined.",
+      {
+        target: "notifications",   // 🔥 IMPORTANT
+        type: "join_declined",
+        communityId: communityId || "",
+      }
+    );
+
+    res.json({ ok: true });
+  } catch (e) {
+    console.error("/events/join-declined error", e);
+    res.status(500).json({ ok: false, error: e?.message || String(e) });
+  }
+});
 // health check
 app.get("/health", (req, res) => {
   res.send("OK");
