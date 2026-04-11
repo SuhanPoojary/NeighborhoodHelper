@@ -47,11 +47,12 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             "onMessageReceived(): from=${message.from} dataKeys=${message.data.keys} hasNotification=${message.notification != null}"
         )
 
-        val title = message.notification?.title
-            ?: message.data["title"]
+        val title = message.data["title"]
+            ?: message.notification?.title
             ?: "Update"
-        val body = message.notification?.body
-            ?: message.data["body"]
+
+        val body = message.data["body"]
+            ?: message.notification?.body
             ?: message.data["message"]
             ?: "You have a new update."
 
