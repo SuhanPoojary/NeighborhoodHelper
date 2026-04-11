@@ -113,18 +113,20 @@ class AdminJoinRequestsFragment : Fragment() {
             try {
                 repo.approveJoinRequest(request.id)
 
+                // 🔥 DEBUG
                 Log.d("DEBUG_UID", "Approve UID: ${request.residentUid}")
 
-                if (request.residentUid.isNotBlank()) {
-                    BackendClient.api.joinApproved(
-                        JoinApprovedEvent(
-                            residentId = request.residentUid,
-                            communityId = request.communityId
-                        )
-                    )
-                } else {
-                    Log.e("DEBUG_UID", "Resident UID EMPTY ❌")
+                if (request.residentUid.isBlank()) {
+                    Log.e("DEBUG_UID", "UID EMPTY ❌")
                 }
+
+                // 🔥 DIRECT API CALL (NO CONDITION)
+                BackendClient.api.joinApproved(
+                    JoinApprovedEvent(
+                        residentId = request.residentUid,
+                        communityId = request.communityId
+                    )
+                )
 
                 Toast.makeText(requireContext(), "Approved", Toast.LENGTH_SHORT).show()
                 loadRequests()
@@ -140,23 +142,22 @@ class AdminJoinRequestsFragment : Fragment() {
         progressBar?.visibility = View.VISIBLE
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                // 🔥 STEP 1: Firestore update
                 repo.declineJoinRequest(request.id)
 
-                // 🔥 STEP 2: DEBUG CHECK (VERY IMPORTANT)
+                // 🔥 DEBUG
                 Log.d("DEBUG_UID", "Decline UID: ${request.residentUid}")
 
-                // 🔥 STEP 3: BACKEND CALL
-                if (request.residentUid.isNotBlank()) {
-                    BackendClient.api.joinDeclined(
-                        JoinApprovedEvent(
-                            residentId = request.residentUid,   // 🔥 IMPORTANT
-                            communityId = request.communityId
-                        )
-                    )
-                } else {
-                    Log.e("DEBUG_UID", "Resident UID EMPTY ❌")
+                if (request.residentUid.isBlank()) {
+                    Log.e("DEBUG_UID", "UID EMPTY ❌")
                 }
+
+                // 🔥 DIRECT API CALL
+                BackendClient.api.joinDeclined(
+                    JoinApprovedEvent(
+                        residentId = request.residentUid,
+                        communityId = request.communityId
+                    )
+                )
 
                 Toast.makeText(requireContext(), "Declined", Toast.LENGTH_SHORT).show()
                 loadRequests()
