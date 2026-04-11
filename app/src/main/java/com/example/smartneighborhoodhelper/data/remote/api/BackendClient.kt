@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit
 object BackendClient {
 
     // 🔥 STEP 1: Yaha baad me Render URL daalenge
-    private const val BASE_URL = "https://neighborhoodhelper.onrender.com/"
+    private const val BASE_URL = "https://neighborhoodhelper.onrender.com"
 
     // Optional (leave empty for now)
     private const val EVENTS_SECRET = ""

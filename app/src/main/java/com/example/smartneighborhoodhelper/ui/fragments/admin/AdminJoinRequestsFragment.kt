@@ -108,9 +108,24 @@ class AdminJoinRequestsFragment : Fragment() {
         progressBar?.visibility = View.VISIBLE
         viewLifecycleOwner.lifecycleScope.launch {
             try {
+                // 🔥 STEP 1: Firestore update
                 repo.approveJoinRequest(request.id)
+
+                // 🔥 STEP 2: BACKEND CALL (ADD THIS)
+                try {
+                    BackendClient.api.joinApproved(
+                        JoinApprovedEvent(
+                            residentId = request.residentId,
+                            communityId = request.communityId
+                        )
+                    )
+                } catch (e: Exception) {
+                    // fail bhi ho gaya to app crash nahi hona chahiye
+                }
+
                 Toast.makeText(requireContext(), "Approved", Toast.LENGTH_SHORT).show()
                 loadRequests()
+
             } catch (e: Exception) {
                 progressBar?.visibility = View.GONE
                 Toast.makeText(requireContext(), e.message ?: "Failed", Toast.LENGTH_LONG).show()

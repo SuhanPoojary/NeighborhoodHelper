@@ -124,11 +124,39 @@ router.post('/join-request', async (req, res, next) => {
 
     const result = await sendToUser(adminId, title, body, {
       type: 'join_request',
+      target: 'admin_requests',
       communityId,
       residentId,
     });
 
     res.json({ ok: true, event: 'join-request', result });
+  } catch (e) {
+    next(e);
+  }
+});
+
+// 🔥 NEW: Join request approved → notify resident
+router.post('/join-approved', async (req, res, next) => {
+  try {
+    const { residentId, communityId } = req.body || {};
+
+    if (!residentId || !communityId) {
+      return res.status(400).json({
+        error: 'missing_fields',
+        required: ['residentId', 'communityId']
+      });
+    }
+
+    const title = 'Request Approved';
+    const body = 'Your request for joining the community has been approved';
+
+    const result = await sendToUser(residentId, title, body, {
+      type: 'join_approved',
+      target: 'dashboard',   // 🔥 important
+      communityId,
+    });
+
+    res.json({ ok: true, event: 'join-approved', result });
   } catch (e) {
     next(e);
   }

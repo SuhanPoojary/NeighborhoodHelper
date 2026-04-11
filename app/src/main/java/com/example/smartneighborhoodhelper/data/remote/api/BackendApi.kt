@@ -17,7 +17,11 @@ interface BackendApi {
 
     @POST("events/join-request")
     suspend fun joinRequest(@Body body: JoinRequestEvent): BackendEventResponse
+
+    @POST("events/join-approved")
+    suspend fun joinApproved(@Body body: JoinApprovedEvent): BackendEventResponse
 }
+
 
 data class ComplaintCreatedEvent(
     val adminId: String,
@@ -54,5 +58,10 @@ data class BackendEventResponse(
     val result: Any? = null,
     val error: String? = null,
     val message: String? = null
+)
+
+data class JoinApprovedEvent(
+    val residentId: String,
+    val communityId: String
 )
 
